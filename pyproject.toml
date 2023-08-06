@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "pandas-intervals"
+version = "0.1.0"
+description = "Pandas extention for Dataframes of intervals"
+authors = ["BlakeJC94 <blakejamescook@gmail.com>"]
+license = "GPL-v3.0"
+readme = "README.md"
+packages = [{include = "pandas_intervals"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "<=1.6.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.7.0"
+ruff = "^0.0.282"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
