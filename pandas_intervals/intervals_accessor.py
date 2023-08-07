@@ -162,8 +162,11 @@ class IntervalsAccessor(FieldsTrait):
             sort_cols=self.additional_cols,
         )
 
-    # TODO intersection
-    # TODO intersection
+    def intersection(self, *dfs):
+        return intervals_intersection(
+            [self._obj, *[self._format(df) for df in dfs]],
+            groupby_cols=self.groupby_cols,
+        )
 
 
 def intervals_union(
@@ -174,4 +177,34 @@ def intervals_union(
         return intervals
     sort_cols = sort_cols if sort_cols is not None else []
     return intervals.sort_values(["start", *sort_cols]).drop_duplicates()
+
+
+def intervals_intersection(
+    dfs: List[pd.DataFrames],
+    groupby_cols: Optional[List[str]] = None,
+):
+    intervals = pd.concat(dfs, axis=0)
+    if intervals.empty:
+        return intervals
+
+    if groupby_cols is None:
+        groupby_cols = []
+
+    if len(groupby_cols) == 0:
+        return _get_overlapping(intervals)
+
+    result = []
+    for _, df_group in intervals.groupby(groupby_cols):
+        result.append(_get_overlapping(df_group))
+    return pd.concat(result, axis=0).sort_values("start")
+
+
+# TODO searchsorted implementation
+def _get_overlapping(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.sort_values("start")
+    starts, ends = df["start"].values, df["end"].values
+    overlaps = starts[1:] - ends[:-1]
+    df = df.iloc[:-1]
+    return df.loc[(overlaps < 0)]
+
 
