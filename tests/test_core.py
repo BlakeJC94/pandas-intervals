@@ -17,7 +17,7 @@ def intervals_frame_a():
             [150, 200],
             [300, 450],
         ],
-    ).format()
+    )
 
 @pytest.fixture
 def intervals_frame_b():

@@ -7,6 +7,11 @@ import numpy as np
 import pandas as pd
 
 
+# def format_dataframe(df: pd.DataFrame, fields: List[Tuple[str, Any, Union[str, Callable]]]):
+#     if df.empty or df.columns.empty:
+#         return
+#     ...
+
 # TODO Impl is_formatted method
 # TODO Explore __init__ override, see GeoPandas for example (constructor from_df)
 # https://github.com/geopandas/geopandas/blob/main/geopandas/geodataframe.py#L136
@@ -14,6 +19,18 @@ import pandas as pd
 class IntervalsFrame(pd.DataFrame):
     _required_fields = [("start", float, "min"), ("end", float, "max")]
     additional_fields = []
+
+    # def __init__(self, *args, **kwargs):
+    #     # TODO Intercept data if DataFrame
+    #     foo = pd.DataFrame(*args, **kwargs)
+    #     if foo.empty or foo.columns.empty:
+    #         breakpoint()
+    #         foo = IntervalsFrame.empty_frame()
+    #     else:
+    #         foo = foo.rename(columns={0:"start", 1:"end"})
+    #         foo[['start', 'end']] = foo[['start', 'end']].astype(float)
+    #     super().__init__(foo)
+
 
     @property
     def _constructor(self) -> Type:
@@ -87,7 +104,7 @@ class IntervalsFrame(pd.DataFrame):
         dtypes = np.dtype(
             [(col_name, col_type) for col_name, col_type, _ in cls._required_fields]
         )
-        return cls(np.empty(0, dtype=dtypes)).format()
+        return cls(np.empty(0, dtype=dtypes))
 
     def __or__(self, other):
         if not isinstance(other, IntervalsFrame):

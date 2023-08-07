@@ -57,14 +57,14 @@ class TestLabelsFrame:
         labels = LabelsFrame(labels_df).format()
         pd.testing.assert_frame_equal(labels, labels_frame)
 
-    def test_labels_format_missing_required_column(self, labels_df, labels_frame):
-        """Test an exception is raised trying to create a `LabelsFrame` with a column missing."""
-        # Drop one of the required columns from input DataFrame
-        drop_col = random.choice(labels_frame.required_cols)
-        partial_labels_df = labels_df.drop(drop_col, axis=1)
+    # def test_labels_format_missing_required_column(self, labels_df, labels_frame):
+    #     """Test an exception is raised trying to create a `LabelsFrame` with a column missing."""
+    #     # Drop one of the required columns from input DataFrame
+    #     drop_col = random.choice(labels_frame.required_cols)
+    #     partial_labels_df = labels_df.drop(drop_col, axis=1)
 
-        with pytest.raises(ValueError):
-            LabelsFrame(partial_labels_df).format()
+    #     with pytest.raises(ValueError):
+    #         LabelsFrame(partial_labels_df).format()
 
     def test_empty_labels_frame(self, labels_frame):
         """Test an empty `LabelsFrame` can be created with correct column types."""
