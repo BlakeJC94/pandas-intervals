@@ -49,7 +49,7 @@ class FieldsTrait:
         return [col for col, _, agg in cls.fields if agg == "groupby"]
 
 
-@pd.api.extensions.register_dataframe_accessor("intervals")
+@pd.api.extensions.register_dataframe_accessor("ivl")
 class IntervalsAccessor(FieldsTrait):
     """A DataFrame accessor for frames containing intervals (columns "start" and "end").
 
