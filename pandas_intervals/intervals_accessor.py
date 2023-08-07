@@ -90,18 +90,22 @@ class IntervalsAccessor(FieldsTrait):
 
     """
 
-    def __init__(self, pandas_obj=None):
-        if pandas_obj.empty or pandas_obj.columns.empty:
-            pandas_obj = self.empty()
-        else:
-            pandas_obj = pandas_obj.rename(
-                columns={i: col for i, col in enumerate(self.cols)}
-            )
-            self._validate(pandas_obj)
-            pandas_obj = self._fill_defaults_for_cols(pandas_obj)
-            pandas_obj = self._set_types(pandas_obj)
-            pandas_obj = self._sort_columns(pandas_obj)
+    def __init__(self, pandas_obj: pd.DataFrame):
+        pandas_obj = self._format(pandas_obj)
         self._obj = pandas_obj
+
+    @classmethod
+    def _format(cls, pandas_obj):
+        if pandas_obj.columns.empty:
+            return cls.empty()
+        pandas_obj = pandas_obj.rename(
+            columns={i: col for i, col in enumerate(cls.cols)}
+        )
+        cls._validate(pandas_obj)
+        pandas_obj = cls._fill_defaults_for_cols(pandas_obj)
+        pandas_obj = cls._set_types(pandas_obj)
+        pandas_obj = cls._sort_columns(pandas_obj)
+        return pandas_obj
 
     def __call__(self):
         return self._obj
