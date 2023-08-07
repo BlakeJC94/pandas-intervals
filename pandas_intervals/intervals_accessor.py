@@ -152,13 +152,14 @@ class IntervalsAccessor(FieldsTrait):
         ends = self._obj["end"]
         return ends - starts
 
+    # TODO plot durations using plotly
     def plot(self):
-        # plot durations using plotly
         pass
 
-    def union(self, other):  # TODO Make this implementation accessor-name independent
+    def union(self, *dfs):
         return intervals_union(
-            self._obj, other.intervals(), sort_cols=self.additional_cols
+            [self._obj, *[self._format(df) for df in dfs]],
+            sort_cols=self.additional_cols,
         )
 
     # TODO intersection
@@ -166,11 +167,11 @@ class IntervalsAccessor(FieldsTrait):
 
 
 def intervals_union(
-    vf_a: pd.DataFrame, vf_b: pd.DataFrame, sort_cols: Optional[List[str]]
-) -> IntervalsFrame:
+    dfs: List[pd.DataFrame], sort_cols: Optional[List[str]] = None
+) -> pd.DataFrame:
+    intervals = pd.concat(dfs, axis=0)
+    if intervals.empty:
+        return intervals
     sort_cols = sort_cols if sort_cols is not None else []
-    return (
-        pd.concat([vf_a, vf_b], axis=0)
-        .sort_values(["start", *sort_cols])
-        .drop_duplicates()
-    )
+    return intervals.sort_values(["start", *sort_cols]).drop_duplicates()
+
