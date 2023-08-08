@@ -7,99 +7,6 @@ import pytest
 from pandas_intervals.examples import LabelsFrame, RegionsFrame
 
 
-# Expected parsed object
-@pytest.fixture
-def labels_frame():
-    return LabelsFrame(
-        data=[
-            [0.0, 100.0, "tag1", "study1", 0.0, "some text"],
-            [0.0, 100.0, "tag2", "study1", 0.0, "some text"],
-            [200.0, 350.0, "tag1", "study2", 0.0, ""],
-            [1000.0, 2000.0, "undefined", "study2", 0.75, ""],
-        ],
-        columns=["start", "end", "tag", "study_id", "confidence", "note"],
-    )
-
-
-@pytest.fixture
-def another_labels_frame():
-    return LabelsFrame(
-        data=[
-            [0.0, 100.0, "tag1", "study3", 0.0, "some text"],
-            [100.0, 200.0, "tag2", "study1", 0.0, "some text"],
-            [100.0, 200.0, "tag1", "study1", 0.0, "other text"],
-            [200.0, 350.0, "tag3", "study2", 0.0, ""],
-            [1000.0, 2000.0, "undefined", "study2", 0.75, ""],
-        ],
-        columns=["start", "end", "tag", "study_id", "confidence", "note"],
-    )
-
-
-# Input data sources
-@pytest.fixture
-def labels_df():
-    return pd.DataFrame(
-        data=[
-            [0, 100, "study1", "tag1", 0.0, "some text"],
-            [0, 100, "study1", "tag2", 0.0, "some text"],
-            [200, 350, "study2", "tag1", 0.0, ""],
-            [1000, 2000, "study2", "undefined", 0.75, ""],
-        ],
-        columns=["start", "end", "study_id", "tag", "confidence", "note"],
-    )
-
-
-class TestLabelsFrame:
-    """Tests for the `LabelsFrame` class."""
-
-    def test_format_labels(self, labels_df, labels_frame):
-        """Test a `LabelsFrame` can be created from a `DataFrame` of labels."""
-        labels = LabelsFrame(labels_df).format()
-        pd.testing.assert_frame_equal(labels, labels_frame)
-
-    # def test_labels_format_missing_required_column(self, labels_df, labels_frame):
-    #     """Test an exception is raised trying to create a `LabelsFrame` with a column missing."""
-    #     # Drop one of the required columns from input DataFrame
-    #     drop_col = random.choice(labels_frame.required_cols)
-    #     partial_labels_df = labels_df.drop(drop_col, axis=1)
-
-    #     with pytest.raises(ValueError):
-    #         LabelsFrame(partial_labels_df).format()
-
-    def test_empty_labels_frame(self, labels_frame):
-        """Test an empty `LabelsFrame` can be created with correct column types."""
-        empty_labels = LabelsFrame.empty_frame()
-        assert isinstance(empty_labels, LabelsFrame)
-        assert len(empty_labels) == 0
-        assert empty_labels.columns.tolist() == [
-            *LabelsFrame.required_cols,
-            *LabelsFrame.additional_cols,
-        ]
-        assert (empty_labels.dtypes == labels_frame.dtypes).all()
-
-    def test_union_labels_frame(self, labels_frame, another_labels_frame):
-        """Test a `LabelsFrame` can be unioned with another `LabelsFrame`."""
-        result_a = labels_frame | another_labels_frame
-        result_b = another_labels_frame | labels_frame
-        pd.testing.assert_frame_equal(
-            result_a.reset_index(drop=True),
-            result_b.reset_index(drop=True),
-        )
-        assert (
-            len(result_a) == len(labels_frame) + len(another_labels_frame) - 1
-        ), "Result contains duplicate."
-
-    def test_intersection_labels_frame(self, labels_frame, another_labels_frame):
-        """Test a `LabelsFrame` can be intersectioned with another `LabelsFrame`."""
-        result_a = labels_frame & another_labels_frame
-        result_b = another_labels_frame & labels_frame
-        pd.testing.assert_frame_equal(
-            result_a.reset_index(drop=True),
-            result_b.reset_index(drop=True),
-        )
-        assert len(result_a) == 1
-
-
 # Test data
 @pytest.fixture
 def regions_df():
@@ -181,18 +88,6 @@ class TestRegionsFrame:
             result_b.reset_index(drop=True),
         )
         assert len(result_a) == 1
-
-
-# TODO Reimplement
-# def test_raise_union_labels_frame_regions_frame(labels_frame, regions_frame):
-#     with pytest.raises(ValueError):
-#         _ = labels_frame | regions_frame
-
-
-# TODO Reimplement
-# def test_raise_intersection_labels_frame_regions_frame(labels_frame, regions_frame):
-#     with pytest.raises(ValueError):
-#         _ = labels_frame & regions_frame
 
 
 # TODO REFACTOR

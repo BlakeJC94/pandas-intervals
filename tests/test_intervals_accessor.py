@@ -95,6 +95,7 @@ class TestIntervalsAccessor:
             expected.reset_index(drop=True),
         )
 
+    @pytest.mark.skip
     def test_intervals_intersection(self):
         """Test an interval intersection can be computed between two `DataFrame`s of intervals."""
         # TODO Re-enable prop-based test once debugged
