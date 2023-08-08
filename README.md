@@ -70,6 +70,11 @@ diff = vf_a.ivl.diff(vf_b)
 complement = vf_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
 ```
 
+We can also plot these intervals using a plotly backend (if available):
+```python
+vf_a.ivl.plot()  # Plot a single DataFrame of intervals
+vf_a.ivl.plot(vf_b)  # Compare multiple DataFrames of intervals on a plot
+```
 
 This interface can easily be extended, we can add additional columns with default values and types.
 For example, if we want to create an intervals accessor called `"regions"` which

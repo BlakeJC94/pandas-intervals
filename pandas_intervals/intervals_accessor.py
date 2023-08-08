@@ -153,7 +153,9 @@ class IntervalsAccessor(FieldsTrait):
         return ends - starts
 
     # TODO plot durations using plotly
-    def plot(self):
+    # TODO format and plot other dfs on rows
+    def plot(self, *dfs):
+        # TODO raise if plotly not installed
         pass
 
     def union(self, *dfs) -> pd.DataFrame:
