@@ -222,7 +222,7 @@ class IntervalsAccessor(FieldsTrait):
         self, left_bound: Optional[float] = None, right_bound: Optional[float] = None
     ):
         return intervals_complement(
-            self._obj
+            self._obj,
             groupby_cols=self.groupby_cols,
         )
         # return intervals_difference(
@@ -242,7 +242,7 @@ def intervals_union(
 
 
 def intervals_intersection(
-    dfs: List[pd.DataFrames],
+    dfs: List[pd.DataFrame],
     groupby_cols: Optional[List[str]] = None,
 ):
     intervals = pd.concat(dfs, axis=0)

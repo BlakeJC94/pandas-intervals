@@ -15,7 +15,5 @@ def labels_df():
     )
 
 def test_intervals_accessor(labels_df):
-    df = labels_df
-    breakpoint()
-    labels_df.intervals
+    labels_df.ivl()
     ...
