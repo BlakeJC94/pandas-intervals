@@ -175,16 +175,37 @@ class IntervalsAccessor(FieldsTrait):
             aggregations=self.aggregations,
         )
 
-    # TODO asymmetric padding
-    def pad(self, gap_size: float):
-        self._obj["start"] = self._obj["start"] - gap_size
-        self._obj["end"] = self._obj["end"] + gap_size
+    def pad(
+        self,
+        pad: Optional[float] = None,
+        left_pad: Optional[float] = None,
+        right_pad: Optional[float] = None,
+    ):
+        if pad is not None:
+            if left_pad is not None or right_pad is not None:
+                raise ValueError(
+                    "Either use `pad`, or `left_pad`/`right_pad`."
+                )
+            left_pad, right_pad = pad, pad
+        self._obj["start"] = self._obj["start"] - left_pad
+        self._obj["end"] = self._obj["end"] + right_pad
         return self._obj
 
-    # TODO asymmetric padding
-    def unpad(self, gap_size: float):
-        self._obj["start"] = self._obj["start"] + gap_size
-        self._obj["end"] = self._obj["end"] - gap_size
+    def unpad(
+        self,
+        unpad: Optional[float] = None,
+        left_unpad: Optional[float] = None,
+        right_unpad: Optional[float] = None,
+    ):
+        if unpad is not None:
+            if left_unpad is not None or right_unpad is not None:
+                raise ValueError(
+                    "Either use `unpad`, or `left_unpad`/`right_unpad`."
+                )
+            left_unpad, right_unpad = unpad, unpad
+
+        self._obj["start"] = self._obj["start"] + left_unpad
+        self._obj["end"] = self._obj["end"] - right_unpad
         return self._obj.loc[self._obj["end"] - self._obj["start"] >= 0]
 
     def diff(self, *dfs):
@@ -195,10 +216,10 @@ class IntervalsAccessor(FieldsTrait):
         )
 
     # TODO complement (w configurable endpoints)
-    def complement(self, left_bound: Optional[float] = None, right_bound: Optional[float] = None):
-        return intervals_complement(
-            [self._obj]
-        )
+    def complement(
+        self, left_bound: Optional[float] = None, right_bound: Optional[float] = None
+    ):
+        return intervals_complement([self._obj])
         # return intervals_difference(
         #     [self._obj, *[self._format(df) for df in dfs]],
         #     groupby_cols=self.groupby_cols,
@@ -292,6 +313,7 @@ def intervals_difference(
     # TODO assert len >0
     # TODO combine
     # TODO groupby and diff
+
 
 def intervals_complement(
     df: pd.DataFrame,
