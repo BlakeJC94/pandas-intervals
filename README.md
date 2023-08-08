@@ -20,16 +20,20 @@ We can represent these sets in `python` using `DataFrames`, and
 import pandas as pd
 import pandas_intervals
 
-vf_a = DataFrame(
+vf_a = pd.DataFrame(
     [
         [50, 100],
         [150, 200],
         [300, 450],
     ],
 ).ivl()
-print(sf_a)
+print(vf_a)
+#    start    end
+# 0   50.0  100.0
+# 1  150.0  200.0
+# 2  300.0  450.0
 
-vf_b = DataFrame(
+vf_b = pd.DataFrame(
     [
         [10, 40],
         [80, 120],
@@ -39,7 +43,14 @@ vf_b = DataFrame(
         [510, 550],
     ],
 ).ivl()
-print(sf_b)
+print(vf_b)
+#    start    end
+# 0   10.0   40.0
+# 1   80.0  120.0
+# 2  230.0  280.0
+# 3  330.0  370.0
+# 4  420.0  490.0
+# 5  510.0  550.0
 ```
 
 We have all the standard methods available to DataFrames, but we also now have native interval set operations implemented trhough the `ivl` accessor:
@@ -50,9 +61,9 @@ intersection = vf_a.ivl.intersection(vf_b)
 
 combined = vf_a.ivl.combine(vf_b)
 
-padded = vf_a.ivl.pad(10)  #
+padded = vf_a.ivl.pad(10)  # Optional kwargs: `left_pad`, `right_pad`
 
-unpadded = vf_a.ivl.unpad(10)
+unpadded = vf_a.ivl.unpad(10)  # Optional kwargs: `left_unpad`, `right_unpad`
 
 diff = vf_a.ivl.diff(vf_b)
 
@@ -62,11 +73,11 @@ complement = vf_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_boun
 
 This interface can easily be extended, we can add additional columns with default values and types.
 For example, if we want to create an intervals accessor called `"regions"` which
-    * Has 2 extra columns ("tag" and "note"),
-    * Column "tag" must be specified, but "note" is optional,
-    * Column "tag" is an integer, and "note" is a string,
-    * Aggregations are done across different values of "tag", and "note" values are combined
-        into a comma-separated string.
+* Has 2 extra columns ("tag" and "note"),
+* Column "tag" must be specified, but "note" is optional,
+* Column "tag" is an integer, and "note" is a string,
+* Aggregations are done across different values of "tag", and "note" values are combined
+    into a comma-separated string.
 
 We can accomplish this in a relatively small class:
 
@@ -87,6 +98,7 @@ class RegionsAccessor(IntervalsAccessor):
          "note": "",
     }
 
+    # Add whatever methods/properties you want!
     def all_notes(self):
         return self._obj["note"]
 ```
