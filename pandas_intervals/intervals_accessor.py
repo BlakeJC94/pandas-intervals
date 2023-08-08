@@ -90,12 +90,13 @@ class IntervalsAccessor(FieldsTrait):
 
     """
 
+    # TODO Consider if formatting should be lazy
     def __init__(self, pandas_obj: pd.DataFrame):
         pandas_obj = self._format(pandas_obj)
         self._obj = pandas_obj
 
     @classmethod
-    def _format(cls, pandas_obj):
+    def _format(cls, pandas_obj: pd.DataFrame) -> pd.DataFrame:
         if pandas_obj.columns.empty:
             return cls.empty()
         pandas_obj = pandas_obj.rename(
