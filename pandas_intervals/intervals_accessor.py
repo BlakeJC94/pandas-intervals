@@ -156,26 +156,53 @@ class IntervalsAccessor(FieldsTrait):
     def plot(self):
         pass
 
-    def union(self, *dfs):
+    def union(self, *dfs) -> pd.DataFrame:
         return intervals_union(
             [self._obj, *[self._format(df) for df in dfs]],
             sort_cols=self.additional_cols,
         )
 
-    def intersection(self, *dfs):
+    def intersection(self, *dfs) -> pd.DataFrame:
         return intervals_intersection(
             [self._obj, *[self._format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
 
-    def combine(self, *dfs):
+    def combine(self, *dfs) -> pd.DataFrame:
         return intervals_combine(
             [self._obj, *[self._format(df) for df in dfs]],
+            groupby_cols=self.groupby_cols,
             aggregations=self.aggregations,
         )
 
-    # TODO diff
+    # TODO asymmetric padding
+    def pad(self, gap_size: float):
+        self._obj["start"] = self._obj["start"] - gap_size
+        self._obj["end"] = self._obj["end"] + gap_size
+        return self._obj
+
+    # TODO asymmetric padding
+    def unpad(self, gap_size: float):
+        self._obj["start"] = self._obj["start"] + gap_size
+        self._obj["end"] = self._obj["end"] - gap_size
+        return self._obj.loc[self._obj["end"] - self._obj["start"] >= 0]
+
+    def diff(self, *dfs):
+        return intervals_difference(
+            self._obj,
+            [self._format(df) for df in dfs],
+            groupby_cols=self.groupby_cols,
+        )
+
     # TODO complement (w configurable endpoints)
+    def complement(self, left_bound: Optional[float] = None, right_bound: Optional[float] = None):
+        return intervals_complement(
+            [self._obj]
+        )
+        # return intervals_difference(
+        #     [self._obj, *[self._format(df) for df in dfs]],
+        #     groupby_cols=self.groupby_cols,
+        # )
 
 
 def intervals_union(
@@ -254,3 +281,21 @@ def intervals_combine(
         combined_labels.append(grpd_labels)
 
     return pd.concat(combined_labels).reset_index(drop=True)
+
+
+def intervals_difference(
+    df: pd.DataFrame,
+    dfs: List[pd.DataFrame],
+    groupby_cols: Optional[List[str]] = None,
+):
+    ...
+    # TODO assert len >0
+    # TODO combine
+    # TODO groupby and diff
+
+def intervals_complement(
+    df: pd.DataFrame,
+    groupby_cols: Optional[List[str]] = None,
+):
+    ...
+    # TODO combine
