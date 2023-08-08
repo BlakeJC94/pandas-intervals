@@ -239,7 +239,7 @@ def intervals_union(
     if intervals.empty:
         return intervals
     sort_cols = sort_cols if sort_cols is not None else []
-    return intervals.sort_values(["start", *sort_cols]).drop_duplicates()
+    return intervals.sort_values(["start", "end", *sort_cols]).drop_duplicates()
 
 
 def intervals_intersection(
