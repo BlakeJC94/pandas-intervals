@@ -221,7 +221,10 @@ class IntervalsAccessor(FieldsTrait):
     def complement(
         self, left_bound: Optional[float] = None, right_bound: Optional[float] = None
     ):
-        return intervals_complement([self._obj])
+        return intervals_complement(
+            self._obj
+            groupby_cols=self.groupby_cols,
+        )
         # return intervals_difference(
         #     [self._obj, *[self._format(df) for df in dfs]],
         #     groupby_cols=self.groupby_cols,
@@ -272,7 +275,7 @@ def intervals_combine(
     groupby_cols: Optional[List[str]] = None,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
-    intervals = pd.concat(dfs, axis=0)
+    intervals = intervals_union(dfs, groupby_cols)
     if intervals.empty:
         return intervals
 
@@ -305,16 +308,102 @@ def intervals_combine(
 
     return pd.concat(combined_labels).reset_index(drop=True)
 
+# TODO Remove duplication
+def _intervals_overlapping(intervals: Union[np.ndarray, pd.DataFrame]):
+    if isinstance(intervals, pd.DataFrame):
+        intervals = intervals[["start", "end"]].values
+    intervals = intervals[np.argsort(intervals[:, 0]), :]
+    starts, ends = intervals[:, 0], intervals[:, 1]
+    overlaps = starts[1:] - ends[:-1]
+    return (overlaps < 0).any()
+
+def _points_from_intervals(interval_groups: List[np.ndarray]) -> Tuple[np.ndarray]:
+    n_interval_groups = len(interval_groups)
+    interval_points, interval_indices = [], []
+    for i, intervals in enumerate(interval_groups):
+        assert not _intervals_overlapping(
+            intervals
+        ), "Expected the intervals within a group to be non-overlapping"
+        n_intervals = len(intervals)
+
+        indices = np.zeros((n_intervals, n_interval_groups))
+        indices[:, i] = np.arange(n_intervals) + 1
+        indices = np.concatenate([indices, -indices], axis=0)
+
+        points = np.concatenate([intervals[:, 0:1], intervals[:, 1:2]], axis=0)
+
+        interval_points.append(points)
+        interval_indices.append(indices)
+
+    interval_points = np.concatenate(interval_points, axis=0)
+    interval_indices = np.concatenate(interval_indices, axis=0)
+
+    idx = np.argsort(interval_points[:, 0])
+    interval_points = interval_points[idx, :]
+    interval_indices = interval_indices[idx, :]
+
+    interval_indices = np.abs(np.cumsum(interval_indices, axis=0)) - 1
+    return interval_points, interval_indices
+
+def _atomize_intervals(
+    interval_groups: List[np.ndarray],
+    min_len: Optional[float] = None,
+    drop_gaps: bool = True,
+) -> Tuple[np.ndarray, np.ndarray]:
+    points, indices = _points_from_intervals(interval_groups)
+    for i in range(1, len(interval_groups)):
+        indices[indices[:, i] != -1, :i] = -1
+
+    starts, ends = points[:-1, 0:1], points[1:, 0:1]
+    interval_idxs = indices[:-1].astype(int)
+    atomized_intervals = np.concatenate([starts, ends], axis=1)
+
+    if drop_gaps:
+        mask_nongap_intervals = (interval_idxs != -1).any(axis=1)
+
+        atomized_intervals = atomized_intervals[mask_nongap_intervals]
+        interval_idxs = interval_idxs[mask_nongap_intervals]
+
+    if min_len is not None:
+        interval_lengths = atomized_intervals[:, 1] - atomized_intervals[:, 0]
+        mask_above_min_len = interval_lengths > min_len
+
+        atomized_intervals = atomized_intervals[mask_above_min_len]
+        interval_idxs = interval_idxs[mask_above_min_len]
+
+    return atomized_intervals, interval_idxs
 
 def intervals_difference(
     df: pd.DataFrame,
     dfs: List[pd.DataFrame],
     groupby_cols: Optional[List[str]] = None,
+    min_len: Optional[float] = None,
 ):
-    ...
-    # TODO assert len >0
-    # TODO combine
-    # TODO groupby and diff
+    intervals_b = intervals_combine(dfs, groupby_cols)
+
+    if len(intervals_b) == 0:
+        return df
+
+    # TODO groupby
+    intervals_a = intervals_combine([df], groupby_cols)
+
+    input_columns = df.columns
+    intervals_a_metadata = df.drop(["start", "end"], axis=1)
+
+    intervals_a = intervals_a[["start", "end"]].values.copy()
+    intervals_b = intervals_b[["start", "end"]].values.copy()
+
+    atoms, indices = _atomize_intervals(
+        [intervals_a, intervals_b],
+        drop_gaps=False,
+        min_len=min_len,
+    )
+    mask_a_atoms = (indices[:, 0] != -1) & (indices[:, 1] == -1)
+    result, indices = atoms[mask_a_atoms], indices[mask_a_atoms, 0]
+
+    intervals_a_diff_b = intervals_a_metadata.iloc[indices].reset_index(drop=True)
+    intervals_a_diff_b[["start", "end"]] = result
+    return intervals_a_diff_b[input_columns]
 
 
 def intervals_complement(
