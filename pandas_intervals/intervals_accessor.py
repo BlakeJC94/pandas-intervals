@@ -379,36 +379,49 @@ def intervals_difference(
     groupby_cols: Optional[List[str]] = None,
     min_len: Optional[float] = None,
 ):
-    intervals_b = intervals_combine(dfs, groupby_cols)
+    if len(dfs) == 0:
+        return df
 
+    intervals_b = intervals_combine(dfs, groupby_cols)
     if len(intervals_b) == 0:
         return df
 
-    # TODO groupby
     intervals_a = intervals_combine([df], groupby_cols)
 
-    input_columns = df.columns
-    intervals_a_metadata = df.drop(["start", "end"], axis=1)
+    # TODO Fix groupby to select vals in intervals_b
+    results = []
+    for _, intervals_a_group in intervals_a.groupby(groupby_cols):
+        input_columns = df.columns
+        intervals_a_metadata = df.drop(["start", "end"], axis=1)
 
-    intervals_a = intervals_a[["start", "end"]].values.copy()
-    intervals_b = intervals_b[["start", "end"]].values.copy()
+        intervals_a = intervals_a[["start", "end"]].values.copy()
+        intervals_b = intervals_b[["start", "end"]].values.copy()
 
-    atoms, indices = _atomize_intervals(
-        [intervals_a, intervals_b],
-        drop_gaps=False,
-        min_len=min_len,
-    )
-    mask_a_atoms = (indices[:, 0] != -1) & (indices[:, 1] == -1)
-    result, indices = atoms[mask_a_atoms], indices[mask_a_atoms, 0]
+        atoms, indices = _atomize_intervals(
+            [intervals_a, intervals_b],
+            drop_gaps=False,
+            min_len=min_len,
+        )
+        mask_a_atoms = (indices[:, 0] != -1) & (indices[:, 1] == -1)
+        result, indices = atoms[mask_a_atoms], indices[mask_a_atoms, 0]
 
-    intervals_a_diff_b = intervals_a_metadata.iloc[indices].reset_index(drop=True)
-    intervals_a_diff_b[["start", "end"]] = result
-    return intervals_a_diff_b[input_columns]
+        intervals_a_diff_b = intervals_a_metadata.iloc[indices].reset_index(drop=True)
+        intervals_a_diff_b[["start", "end"]] = result
+        results.append(intervals_a_diff_b[input_columns])
+
+    return intervals_union(result, groupby_cols)
 
 
 def intervals_complement(
     df: pd.DataFrame,
     groupby_cols: Optional[List[str]] = None,
 ):
-    ...
-    # TODO combine
+    df = intervals_combine(df, groupby_cols)
+    result = []
+    for vals, df_group in df.groupby(groupby_cols):
+        ...
+        # TODO append and prepend zero duration labels
+        # TODO get starts and ends
+        # TODO Append to results
+    return intervals_union(result, groupby_cols)
+
