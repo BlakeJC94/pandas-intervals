@@ -15,20 +15,21 @@ Say we have two sets of intervals `A` and `B` as specified by:
   B: (--]   (---]          (----]    (---]    (------] (---]
 ```
 
-We can represent these sets in `python` using `IntervalsFrames`
+We can represent these sets in `python` using `DataFrames`, and
 ```python
-from pandas_intervals import IntervalsFrame
+import pandas as pd
+import pandas_intervals
 
-vf_a = IntervalsFrame(
+vf_a = DataFrame(
     [
         [50, 100],
         [150, 200],
         [300, 450],
     ],
-)
+).ivl()
 print(sf_a)
 
-vf_b = IntervalsFrame(
+vf_b = DataFrame(
     [
         [10, 40],
         [80, 120],
@@ -37,45 +38,60 @@ vf_b = IntervalsFrame(
         [420, 490],
         [510, 550],
     ],
-)
+).ivl()
 print(sf_b)
 ```
 
-We have all the standard methods available to DataFrames:
+We have all the standard methods available to DataFrames, but we also now have native interval set operations implemented trhough the `ivl` accessor:
 ```python
-import pandas as pd
-print(f"{isinstance(vf_a, pd.DataFrame) = }")
+union = vf_a.ivl.union(vf_b)
 
-for i, vf in vf_b.groupby(vf_a.index // 2):
-    print(f"--- group {i}:")
-    print(vf)
-```
+intersection = vf_a.ivl.intersection(vf_b)
 
-But we also have native interval set methods implemented as magic methods:
-```python
-union = vf_a | vf_b
+combined = vf_a.ivl.combine(vf_b)
 
-intersection = vf_a & vf_b
+padded = vf_a.ivl.pad(10)  #
 
-combined = vf_a + vf_b
+unpadded = vf_a.ivl.unpad(10)
 
-padded = vf_a + 10
+diff = vf_a.ivl.diff(vf_b)
 
-unpadded = vf_a - 10
-
-# diff = vf_a - vf_b  # TODO
-
-# complement = ~vf_a  # TODO
+complement = vf_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
 ```
 
 
-This interface can easily be extended, we can add additional columns with default values and types
+This interface can easily be extended, we can add additional columns with default values and types.
+For example, if we want to create an intervals accessor called `"regions"` which
+    * Has 2 extra columns ("tag" and "note"),
+    * Column "tag" must be specified, but "note" is optional,
+    * Column "tag" is an integer, and "note" is a string,
+    * Aggregations are done across different values of "tag", and "note" values are combined
+        into a comma-separated string.
+
+We can accomplish this in a relatively small class:
 
 ```python
-class RegionsFrame(IntervalsFrame):
-    # Additional columns to be specified as a list of `(name, value, aggregation)` tuples
-    additional_fields = [
-        ("tag", "undefined", "first"),
-        ("note", "", lambda x: ','.join(x)),
+@pd.api.extensions.register_dataframe_accessor("regions")  # Name of new accessor
+class RegionsAccessor(IntervalsAccessor):
+
+    # Additional required columns can be specified in a list of tuple
+    # where each tuple is `(column_name, dtype, aggregation)`
+    additional_cols = [
+        ("tag", "int64", "groupby"),
+        ("note", "object", lambda x: ','.join(x)),
     ]
+
+    # Default values for columns can be specified as a dictionary,
+    # columns that don't appear in this list are assumed to be necessary
+    default_values = {
+         "note": "",
+    }
+
+    def all_notes(self):
+        return self._obj["note"]
 ```
+
+After defining and running this snippet, we now have
+* `pd.DataFrame(..).regions.all_notes()` available as a method on any DataFrame,
+* `pd.DataFrame(..).regions()` will return a formatted DataFrame as specified by the fields in `RegionsAccessor.additional_cols`,
+* All the methods on the `ivl` accessor come along for free!
