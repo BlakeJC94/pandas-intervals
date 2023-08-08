@@ -106,6 +106,8 @@ class RegionsAccessor(IntervalsAccessor):
     # Add whatever methods/properties you want!
     def all_notes(self):
         return self._obj["note"]
+
+    # TODO Add a constructor example
 ```
 
 After defining and running this snippet, we now have
