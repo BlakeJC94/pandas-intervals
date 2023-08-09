@@ -165,12 +165,6 @@ class IntervalsAccessor(FieldsTrait):
             sort_cols=self.additional_cols,
         )
 
-    def intersection(self, *dfs) -> pd.DataFrame:
-        return intervals_intersection(
-            [self._obj, *[self._format(df) for df in dfs]],
-            groupby_cols=self.groupby_cols,
-        )
-
     def overlap(self, *dfs) -> pd.DataFrame:
         return intervals_overlap(
             [self._obj, *[self._format(df) for df in dfs]],
@@ -179,6 +173,12 @@ class IntervalsAccessor(FieldsTrait):
 
     def non_overlap(self, *dfs) -> pd.DataFrame:
         return intervals_non_overlap(
+            [self._obj, *[self._format(df) for df in dfs]],
+            groupby_cols=self.groupby_cols,
+        )
+
+    def intersection(self, *dfs) -> pd.DataFrame:
+        return intervals_intersection(
             [self._obj, *[self._format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
@@ -198,9 +198,7 @@ class IntervalsAccessor(FieldsTrait):
     ):
         if pad is not None:
             if left_pad is not None or right_pad is not None:
-                raise ValueError(
-                    "Either use `pad`, or `left_pad`/`right_pad`."
-                )
+                raise ValueError("Either use `pad`, or `left_pad`/`right_pad`.")
             left_pad, right_pad = pad, pad
         self._obj["start"] = self._obj["start"] - left_pad
         self._obj["end"] = self._obj["end"] + right_pad
@@ -214,9 +212,7 @@ class IntervalsAccessor(FieldsTrait):
     ):
         if unpad is not None:
             if left_unpad is not None or right_unpad is not None:
-                raise ValueError(
-                    "Either use `unpad`, or `left_unpad`/`right_unpad`."
-                )
+                raise ValueError("Either use `unpad`, or `left_unpad`/`right_unpad`.")
             left_unpad, right_unpad = unpad, unpad
 
         self._obj["start"] = self._obj["start"] + left_unpad
@@ -238,20 +234,21 @@ class IntervalsAccessor(FieldsTrait):
             self._obj,
             groupby_cols=self.groupby_cols,
         )
-        # return intervals_difference(
-        #     [self._obj, *[self._format(df) for df in dfs]],
-        #     groupby_cols=self.groupby_cols,
-        # )
 
 
 def intervals_union(
-    dfs: List[pd.DataFrame], sort_cols: Optional[List[str]] = None
+    dfs: List[pd.DataFrame], sort_cols: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     intervals = pd.concat(dfs, axis=0)
     if intervals.empty:
         return intervals
     sort_cols = sort_cols if sort_cols is not None else []
-    return intervals.sort_values(["start", "end", *sort_cols]).drop_duplicates()
+    return (
+        intervals.sort_values(["start", "end", *sort_cols])
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
+
 
 # TODO searchsorted implementation
 def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
@@ -272,6 +269,7 @@ def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
         mask.append(overlap)
     return np.array(mask)
 
+
 # def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
 #     df = df.sort_values("start")
 #     starts, ends = df["start"].values, df["end"].values
@@ -279,6 +277,7 @@ def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
 #     mask = (overlaps < 0)
 #     mask = np.append(mask, mask[-1])
 #     return mask
+
 
 def intervals_overlap(
     dfs: List[pd.DataFrame],
@@ -298,9 +297,10 @@ def intervals_overlap(
     results = []
     for _, df_group in intervals.groupby(groupby_cols):
         mask = _get_overlapping_mask(df_group)
-        result =  df_group.loc[mask]
+        result = df_group.loc[mask]
         results.append(result)
     return pd.concat(results, axis=0).sort_values("start")
+
 
 # TODO reduce duplication
 def intervals_non_overlap(
@@ -321,9 +321,10 @@ def intervals_non_overlap(
     results = []
     for _, df_group in intervals.groupby(groupby_cols):
         mask = _get_overlapping_mask(df_group)
-        result =  df_group.loc[~mask]
+        result = df_group.loc[~mask]
         results.append(result)
     return pd.concat(results, axis=0).sort_values("start")
+
 
 def intervals_combine(
     dfs: List[pd.DataFrame],
@@ -363,6 +364,14 @@ def intervals_combine(
 
     return pd.concat(combined_labels).reset_index(drop=True)
 
+
+def intervals_intersection(
+    dfs: List[pd.DataFrame],
+    groupby_cols: Optional[List[str]] = None,
+):
+    # TODO loop over each pair and computer intersection
+    ...
+
 # TODO Remove duplication
 def _intervals_overlapping(intervals: Union[np.ndarray, pd.DataFrame]):
     if isinstance(intervals, pd.DataFrame):
@@ -371,6 +380,7 @@ def _intervals_overlapping(intervals: Union[np.ndarray, pd.DataFrame]):
     starts, ends = intervals[:, 0], intervals[:, 1]
     overlaps = starts[1:] - ends[:-1]
     return (overlaps < 0).any()
+
 
 def _points_from_intervals(interval_groups: List[np.ndarray]) -> Tuple[np.ndarray]:
     n_interval_groups = len(interval_groups)
@@ -400,6 +410,7 @@ def _points_from_intervals(interval_groups: List[np.ndarray]) -> Tuple[np.ndarra
     interval_indices = np.abs(np.cumsum(interval_indices, axis=0)) - 1
     return interval_points, interval_indices
 
+
 def _atomize_intervals(
     interval_groups: List[np.ndarray],
     min_len: Optional[float] = None,
@@ -427,6 +438,7 @@ def _atomize_intervals(
         interval_idxs = interval_idxs[mask_above_min_len]
 
     return atomized_intervals, interval_idxs
+
 
 def intervals_difference(
     df: pd.DataFrame,
@@ -479,4 +491,3 @@ def intervals_complement(
         # TODO get starts and ends
         # TODO Append to results
     return intervals_union(result, groupby_cols)
-

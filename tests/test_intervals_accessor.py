@@ -106,20 +106,19 @@ class TestIntervalsAccessor:
         expected_non_overlap = non_overlap_basic(df_a)
 
         pd.testing.assert_frame_equal(
-            df_a_overlap.reset_index(drop=True),
-            expected_overlap.reset_index(drop=True),
+            df_a_overlap,
+            expected_overlap,
         )
         pd.testing.assert_frame_equal(
-            df_a_non_overlap.reset_index(drop=True),
-            expected_non_overlap.reset_index(drop=True),
+            df_a_non_overlap,
+            expected_non_overlap,
         )
 
         result = pd.concat([df_a_overlap, df_a_non_overlap], axis=0)
         pd.testing.assert_frame_equal(
-            result.sort_values("start").reset_index(drop=True),
-            df_a.sort_values("start").reset_index(drop=True),
+            result.sort_values("start"),
+            df_a,
         )
-        # TODO reset index in operations
 
     @pytest.mark.skip
     def test_intervals_intersection(self):
