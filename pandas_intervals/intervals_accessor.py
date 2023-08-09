@@ -48,9 +48,63 @@ class FieldsTrait:
     def groupby_cols(cls) -> List[str]:
         return [col for col, _, agg in cls.fields if agg == "groupby"]
 
+    @classmethod
+    def empty(cls) -> pd.DataFrame:
+        dtype = [(name, kind) for name, kind, _ in cls.fields]
+        return pd.DataFrame(np.empty(0, dtype=np.dtype(dtype)))
+
+
+class FormatTrait:
+    @classmethod
+    def _format(cls, pandas_obj: pd.DataFrame) -> pd.DataFrame:
+        if pandas_obj.columns.empty:
+            return cls.empty()
+        pandas_obj = pandas_obj.rename(
+            columns={i: col for i, col in enumerate(cls.cols)}
+        )
+        cls._validate(pandas_obj)
+        pandas_obj = cls._fill_defaults_for_cols(pandas_obj)
+        pandas_obj = cls._set_types(pandas_obj)
+        pandas_obj = cls._sort_columns(pandas_obj)
+        return pandas_obj
+
+    def __call__(self):
+        return self._obj
+
+    @classmethod
+    def _validate(cls, obj):
+        missing_cols = [col for col in cls.required_cols if col not in obj]
+        if len(missing_cols) > 0:
+            raise ValueError(
+                f"DataFrame missing required column(s) '{', '.join(missing_cols)}'."
+            )
+        if (obj["end"] - obj["start"] < 0).any():
+            raise ValueError("DataFrame contains invalid intervals.")
+
+    @classmethod
+    def _fill_defaults_for_cols(cls, obj: pd.DataFrame) -> pd.DataFrame:
+        for (
+            col,
+            default_val,
+        ) in cls.default_values.items():
+            obj[col] = obj[col].fillna(default_val) if col in obj else default_val
+        return obj
+
+    @classmethod
+    def _set_types(cls, obj: pd.DataFrame) -> pd.DataFrame:
+        for col, kind, _ in cls.fields:
+            if obj.dtypes[col] != kind:
+                obj[col] = obj[col].astype(kind)
+        return obj
+
+    @classmethod
+    def _sort_columns(cls, obj: pd.DataFrame) -> pd.DataFrame:
+        extra_cols = [col for col in obj.columns if col not in cls.cols]
+        return obj[[*cls.cols, *extra_cols]]
+
 
 @pd.api.extensions.register_dataframe_accessor("ivl")
-class IntervalsAccessor(FieldsTrait):
+class IntervalsAccessor(FieldsTrait, FormatTrait):
     """A DataFrame accessor for frames containing intervals (columns "start" and "end").
 
     Invoking this accessor on a DataFrame will check the frame is a valid representation of
@@ -94,58 +148,6 @@ class IntervalsAccessor(FieldsTrait):
     def __init__(self, pandas_obj: pd.DataFrame):
         pandas_obj = self._format(pandas_obj)
         self._obj = pandas_obj
-
-    @classmethod
-    def _format(cls, pandas_obj: pd.DataFrame) -> pd.DataFrame:
-        if pandas_obj.columns.empty:
-            return cls.empty()
-        pandas_obj = pandas_obj.rename(
-            columns={i: col for i, col in enumerate(cls.cols)}
-        )
-        cls._validate(pandas_obj)
-        pandas_obj = cls._fill_defaults_for_cols(pandas_obj)
-        pandas_obj = cls._set_types(pandas_obj)
-        pandas_obj = cls._sort_columns(pandas_obj)
-        return pandas_obj
-
-    def __call__(self):
-        return self._obj
-
-    @classmethod
-    def empty(cls) -> pd.DataFrame:
-        dtype = [(name, kind) for name, kind, _ in cls.fields]
-        return pd.DataFrame(np.empty(0, dtype=np.dtype(dtype)))
-
-    @classmethod
-    def _validate(cls, obj):
-        missing_cols = [col for col in cls.required_cols if col not in obj]
-        if len(missing_cols) > 0:
-            raise ValueError(
-                f"DataFrame missing required column(s) '{', '.join(missing_cols)}'."
-            )
-        if (obj["end"] - obj["start"] < 0).any():
-            raise ValueError("DataFrame contains invalid intervals.")
-
-    @classmethod
-    def _fill_defaults_for_cols(cls, obj: pd.DataFrame) -> pd.DataFrame:
-        for (
-            col,
-            default_val,
-        ) in cls.default_values.items():
-            obj[col] = obj[col].fillna(default_val) if col in obj else default_val
-        return obj
-
-    @classmethod
-    def _set_types(cls, obj: pd.DataFrame) -> pd.DataFrame:
-        for col, kind, _ in cls.fields:
-            if obj.dtypes[col] != kind:
-                obj[col] = obj[col].astype(kind)
-        return obj
-
-    @classmethod
-    def _sort_columns(cls, obj: pd.DataFrame) -> pd.DataFrame:
-        extra_cols = [col for col in obj.columns if col not in cls.cols]
-        return obj[[*cls.cols, *extra_cols]]
 
     @property
     def durations(self) -> pd.Series:
@@ -237,7 +239,8 @@ class IntervalsAccessor(FieldsTrait):
 
 
 def intervals_union(
-    dfs: List[pd.DataFrame], sort_cols: Optional[List[str]] = None,
+    dfs: List[pd.DataFrame],
+    sort_cols: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     intervals = pd.concat(dfs, axis=0)
     if intervals.empty:
@@ -371,6 +374,7 @@ def intervals_intersection(
 ):
     # TODO loop over each pair and computer intersection
     ...
+
 
 # TODO Remove duplication
 def _intervals_overlapping(intervals: Union[np.ndarray, pd.DataFrame]):
