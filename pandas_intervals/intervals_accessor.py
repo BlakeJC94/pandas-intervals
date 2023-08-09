@@ -69,7 +69,7 @@ class FormatTrait:
         return pandas_obj
 
     def __call__(self):
-        return self._obj
+        return self.df
 
     @classmethod
     def _validate(cls, obj):
@@ -144,15 +144,14 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     """
 
-    # TODO Consider if formatting should be lazy
     def __init__(self, pandas_obj: pd.DataFrame):
         pandas_obj = self._format(pandas_obj)
-        self._obj = pandas_obj
+        self.df = pandas_obj
 
     @property
     def durations(self) -> pd.Series:
-        starts = self._obj["start"]
-        ends = self._obj["end"]
+        starts = self.df["start"]
+        ends = self.df["end"]
         return ends - starts
 
     # TODO plot durations using plotly
@@ -163,31 +162,31 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def union(self, *dfs) -> pd.DataFrame:
         return intervals_union(
-            [self._obj, *[self._format(df) for df in dfs]],
+            [self.df, *[self._format(df) for df in dfs]],
             sort_cols=self.additional_cols,
         )
 
     def overlap(self, *dfs) -> pd.DataFrame:
         return intervals_overlap(
-            [self._obj, *[self._format(df) for df in dfs]],
+            [self.df, *[self._format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
 
     def non_overlap(self, *dfs) -> pd.DataFrame:
         return intervals_non_overlap(
-            [self._obj, *[self._format(df) for df in dfs]],
+            [self.df, *[self._format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
 
     def intersection(self, *dfs) -> pd.DataFrame:
         return intervals_intersection(
-            [self._obj, *[self._format(df) for df in dfs]],
+            [self.df, *[self._format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
 
     def combine(self, *dfs) -> pd.DataFrame:
         return intervals_combine(
-            [self._obj, *[self._format(df) for df in dfs]],
+            [self.df, *[self._format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
             aggregations=self.aggregations,
         )
@@ -202,9 +201,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             if left_pad is not None or right_pad is not None:
                 raise ValueError("Either use `pad`, or `left_pad`/`right_pad`.")
             left_pad, right_pad = pad, pad
-        self._obj["start"] = self._obj["start"] - left_pad
-        self._obj["end"] = self._obj["end"] + right_pad
-        return self._obj
+        self.df["start"] = self.df["start"] - left_pad
+        self.df["end"] = self.df["end"] + right_pad
+        return self.df
 
     def unpad(
         self,
@@ -217,13 +216,13 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
                 raise ValueError("Either use `unpad`, or `left_unpad`/`right_unpad`.")
             left_unpad, right_unpad = unpad, unpad
 
-        self._obj["start"] = self._obj["start"] + left_unpad
-        self._obj["end"] = self._obj["end"] - right_unpad
-        return self._obj.loc[self._obj["end"] - self._obj["start"] >= 0]
+        self.df["start"] = self.df["start"] + left_unpad
+        self.df["end"] = self.df["end"] - right_unpad
+        return self.df.loc[self.df["end"] - self.df["start"] >= 0]
 
     def diff(self, *dfs):
         return intervals_difference(
-            self._obj,
+            self.df,
             [self._format(df) for df in dfs],
             groupby_cols=self.groupby_cols,
         )
@@ -233,7 +232,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         self, left_bound: Optional[float] = None, right_bound: Optional[float] = None
     ):
         return intervals_complement(
-            self._obj,
+            self.df,
             groupby_cols=self.groupby_cols,
         )
 
