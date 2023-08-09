@@ -198,7 +198,12 @@ def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
 
     result = np.concatenate([intervals_a, intervals_b])
     result = np.unique(result, axis=0)
-    return pd.DataFrame(result, columns=["start", "end"]).sort_values(["start", "end"]).astype(float)
+    return (
+        pd.DataFrame(result, columns=["start", "end"])
+        .sort_values(["start", "end"])
+        .astype(float)
+    )
+
 
 def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
     intervals_a = df_a.iloc[:, :2].values
@@ -244,4 +249,8 @@ def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
                 idxs_b.append(idx_b)
 
     result = np.concatenate([intervals_a[idxs_a], intervals_b[idxs_b]])
-    return pd.DataFrame(result, columns=["start", "end"]).sort_values(["start", "end"]).astype(float)
+    return (
+        pd.DataFrame(result, columns=["start", "end"])
+        .sort_values(["start", "end"])
+        .astype(float)
+    )
