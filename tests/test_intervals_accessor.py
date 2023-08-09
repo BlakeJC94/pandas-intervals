@@ -95,6 +95,32 @@ class TestIntervalsAccessor:
             expected.reset_index(drop=True),
         )
 
+    def test_intervals_overlap(self):
+        """Test an interval overlap can be computed on a `DataFrame` of intervals."""
+        df_a = random_intervals(n_intervals=random.randint(0, 12))
+
+        df_a_overlap = df_a.ivl.overlap()
+        df_a_non_overlap = df_a.ivl.non_overlap()
+
+        expected_overlap = overlap_basic(df_a)
+        expected_non_overlap = non_overlap_basic(df_a)
+
+        pd.testing.assert_frame_equal(
+            df_a_overlap.reset_index(drop=True),
+            expected_overlap.reset_index(drop=True),
+        )
+        pd.testing.assert_frame_equal(
+            df_a_non_overlap.reset_index(drop=True),
+            expected_non_overlap.reset_index(drop=True),
+        )
+
+        result = pd.concat([df_a_overlap, df_a_non_overlap], axis=0)
+        pd.testing.assert_frame_equal(
+            result.sort_values("start").reset_index(drop=True),
+            df_a.sort_values("start").reset_index(drop=True),
+        )
+        # TODO reset index in operations
+
     @pytest.mark.skip
     def test_intervals_intersection(self):
         """Test an interval intersection can be computed between two `DataFrame`s of intervals."""
@@ -173,6 +199,33 @@ def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     result = np.concatenate([intervals_a, intervals_b])
     result = np.unique(result, axis=0)
     return pd.DataFrame(result, columns=["start", "end"]).sort_values(["start", "end"]).astype(float)
+
+def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
+    intervals_a = df_a.iloc[:, :2].values
+
+    mask = []
+    for start_a, end_a in intervals_a:
+        overlap = False
+        for start_b, end_b in intervals_a:
+            if (
+                (start_b < start_a < end_b < end_a)
+                or (start_a < start_b < end_a < end_b)
+                or ((start_a < start_b) and (end_b < end_a))
+            ):
+                overlap = True
+                break
+        mask.append(overlap)
+    return np.array(mask)
+
+
+def non_overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
+    mask = _overlap_mask_basic(df_a)
+    return df_a.loc[~mask]
+
+
+def overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
+    mask = _overlap_mask_basic(df_a)
+    return df_a.loc[mask]
 
 
 def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
