@@ -142,8 +142,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     """
 
     def __init__(self, pandas_obj: pd.DataFrame):
-        pandas_obj = self.format(pandas_obj)
-        self.df = pandas_obj
+        self.df = self.format(pandas_obj)
 
     def __call__(self):
         return self.df
@@ -161,10 +160,13 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         pass
 
     def union(self, *dfs) -> pd.DataFrame:
-        return intervals_union(
-            [self.df, *[self.format(df) for df in dfs]],
+        interval_sets = [self.df, *[self.format(df) for df in dfs]]
+        result = intervals_union(interval_sets)
+        result = sort_intervals(
+            result,
             sort_cols=self.additional_cols,
         )
+        return result.reset_index(drop=True)
 
     def overlap(self, *dfs) -> pd.DataFrame:
         return intervals_overlap(
@@ -237,19 +239,17 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
 
 
-def intervals_union(
-    dfs: List[pd.DataFrame],
+def intervals_union(dfs: List[pd.DataFrame]) -> pd.DataFrame:
+    return pd.concat(dfs, axis=0).drop_duplicates()
+
+
+def sort_intervals(
+    df: pd.DataFrame,
     sort_cols: Optional[List[str]] = None,
 ) -> pd.DataFrame:
-    intervals = pd.concat(dfs, axis=0)
-    if intervals.empty:
-        return intervals
     sort_cols = sort_cols if sort_cols is not None else []
-    return (
-        intervals.sort_values(["start", "end", *sort_cols])
-        .drop_duplicates()
-        .reset_index(drop=True)
-    )
+    result = df.sort_values(["start", "end", *sort_cols])
+    return result
 
 
 # TODO searchsorted implementation
