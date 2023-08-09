@@ -171,6 +171,18 @@ class IntervalsAccessor(FieldsTrait):
             groupby_cols=self.groupby_cols,
         )
 
+    def overlap(self, *dfs) -> pd.DataFrame:
+        return intervals_overlap(
+            [self._obj, *[self._format(df) for df in dfs]],
+            groupby_cols=self.groupby_cols,
+        )
+
+    def non_overlap(self, *dfs) -> pd.DataFrame:
+        return intervals_non_overlap(
+            [self._obj, *[self._format(df) for df in dfs]],
+            groupby_cols=self.groupby_cols,
+        )
+
     def combine(self, *dfs) -> pd.DataFrame:
         return intervals_combine(
             [self._obj, *[self._format(df) for df in dfs]],
@@ -241,8 +253,34 @@ def intervals_union(
     sort_cols = sort_cols if sort_cols is not None else []
     return intervals.sort_values(["start", "end", *sort_cols]).drop_duplicates()
 
+# TODO searchsorted implementation
+def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
+    df = df.sort_values("start")
+    intervals_a = df.iloc[:, :2].values
 
-def intervals_intersection(
+    mask = []
+    for start_a, end_a in intervals_a:
+        overlap = False
+        for start_b, end_b in intervals_a:
+            if (
+                (start_b < start_a < end_b < end_a)
+                or (start_a < start_b < end_a < end_b)
+                or ((start_a < start_b) and (end_b < end_a))
+            ):
+                overlap = True
+                break
+        mask.append(overlap)
+    return np.array(mask)
+
+# def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
+#     df = df.sort_values("start")
+#     starts, ends = df["start"].values, df["end"].values
+#     overlaps = starts[1:] - ends[:-1]
+#     mask = (overlaps < 0)
+#     mask = np.append(mask, mask[-1])
+#     return mask
+
+def intervals_overlap(
     dfs: List[pd.DataFrame],
     groupby_cols: Optional[List[str]] = None,
 ):
@@ -254,22 +292,38 @@ def intervals_intersection(
         groupby_cols = []
 
     if len(groupby_cols) == 0:
-        return _get_overlapping(intervals)
+        mask = _get_overlapping_mask(intervals)
+        return intervals.loc[mask]
 
-    result = []
+    results = []
     for _, df_group in intervals.groupby(groupby_cols):
-        result.append(_get_overlapping(df_group))
-    return pd.concat(result, axis=0).sort_values("start")
+        mask = _get_overlapping_mask(df_group)
+        result =  df_group.loc[mask]
+        results.append(result)
+    return pd.concat(results, axis=0).sort_values("start")
 
+# TODO reduce duplication
+def intervals_non_overlap(
+    dfs: List[pd.DataFrame],
+    groupby_cols: Optional[List[str]] = None,
+):
+    intervals = pd.concat(dfs, axis=0)
+    if intervals.empty:
+        return intervals
 
-# TODO searchsorted implementation
-def _get_overlapping(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.sort_values("start")
-    starts, ends = df["start"].values, df["end"].values
-    overlaps = starts[1:] - ends[:-1]
-    df = df.iloc[:-1]
-    return df.loc[(overlaps < 0)]
+    if groupby_cols is None:
+        groupby_cols = []
 
+    if len(groupby_cols) == 0:
+        mask = _get_overlapping_mask(intervals)
+        return intervals.loc[~mask]
+
+    results = []
+    for _, df_group in intervals.groupby(groupby_cols):
+        mask = _get_overlapping_mask(df_group)
+        result =  df_group.loc[~mask]
+        results.append(result)
+    return pd.concat(results, axis=0).sort_values("start")
 
 def intervals_combine(
     dfs: List[pd.DataFrame],
