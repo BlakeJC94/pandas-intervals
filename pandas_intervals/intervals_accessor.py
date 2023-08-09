@@ -56,7 +56,7 @@ class FieldsTrait:
 
 class FormatTrait:
     @classmethod
-    def _format(cls, pandas_obj: pd.DataFrame) -> pd.DataFrame:
+    def format(cls, pandas_obj: pd.DataFrame) -> pd.DataFrame:
         if pandas_obj.columns.empty:
             return cls.empty()
         pandas_obj = pandas_obj.rename(
@@ -67,9 +67,6 @@ class FormatTrait:
         pandas_obj = cls._set_types(pandas_obj)
         pandas_obj = cls._sort_columns(pandas_obj)
         return pandas_obj
-
-    def __call__(self):
-        return self.df
 
     @classmethod
     def _validate(cls, obj):
@@ -145,8 +142,11 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     """
 
     def __init__(self, pandas_obj: pd.DataFrame):
-        pandas_obj = self._format(pandas_obj)
+        pandas_obj = self.format(pandas_obj)
         self.df = pandas_obj
+
+    def __call__(self):
+        return self.df
 
     @property
     def durations(self) -> pd.Series:
@@ -162,31 +162,31 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def union(self, *dfs) -> pd.DataFrame:
         return intervals_union(
-            [self.df, *[self._format(df) for df in dfs]],
+            [self.df, *[self.format(df) for df in dfs]],
             sort_cols=self.additional_cols,
         )
 
     def overlap(self, *dfs) -> pd.DataFrame:
         return intervals_overlap(
-            [self.df, *[self._format(df) for df in dfs]],
+            [self.df, *[self.format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
 
     def non_overlap(self, *dfs) -> pd.DataFrame:
         return intervals_non_overlap(
-            [self.df, *[self._format(df) for df in dfs]],
+            [self.df, *[self.format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
 
     def intersection(self, *dfs) -> pd.DataFrame:
         return intervals_intersection(
-            [self.df, *[self._format(df) for df in dfs]],
+            [self.df, *[self.format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
         )
 
     def combine(self, *dfs) -> pd.DataFrame:
         return intervals_combine(
-            [self.df, *[self._format(df) for df in dfs]],
+            [self.df, *[self.format(df) for df in dfs]],
             groupby_cols=self.groupby_cols,
             aggregations=self.aggregations,
         )
@@ -223,7 +223,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def diff(self, *dfs):
         return intervals_difference(
             self.df,
-            [self._format(df) for df in dfs],
+            [self.format(df) for df in dfs],
             groupby_cols=self.groupby_cols,
         )
 
