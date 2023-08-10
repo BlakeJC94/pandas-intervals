@@ -6,6 +6,13 @@ import pandas as pd
 import pytest
 
 import pandas_intervals
+from tests.helpers import (
+    random_intervals,
+    overlap_basic,
+    non_overlap_basic,
+    union_basic,
+    intersection_basic,
+)
 
 
 @pytest.fixture
@@ -158,102 +165,3 @@ class TestIntervalsAccessor:
             expected.reset_index(drop=True),
         )
         ...
-
-
-def random_intervals(
-    n_intervals: int,
-    duration_bounds: Optional[Tuple[float, float]] = None,
-    gap_bounds: Optional[Tuple[float, float]] = None,
-):
-    if n_intervals == 0:
-        return pd.DataFrame.ivl.empty()
-
-    if duration_bounds is None:
-        duration_bounds = (10, 60)
-    if gap_bounds is None:
-        gap_bounds = (-10, 10)
-
-    min_duration, max_duration = duration_bounds
-    durations = min_duration + np.random.rand(n_intervals) * (
-        max_duration - min_duration
-    )
-    durations = np.round(durations, 2)
-
-    min_gap, max_gap = gap_bounds
-    gaps = min_gap + np.random.rand(n_intervals) * (max_gap - min_gap)
-    gaps = np.round(gaps, 2)
-
-    offset = np.random.rand() * np.mean(
-        np.abs(np.concatenate([duration_bounds, gap_bounds]))
-    )
-    starts = np.round(offset, 2) + np.insert(np.cumsum(gaps + durations)[:-1], 0, 0)
-    ends = starts + durations
-    return pd.DataFrame(np.stack([starts, ends], axis=1)).ivl()
-
-
-def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-    intervals_a = df_a.iloc[:, :2].values
-    intervals_b = df_b.iloc[:, :2].values
-
-    result = np.concatenate([intervals_a, intervals_b])
-    result = np.unique(result, axis=0)
-    return (
-        pd.DataFrame(result, columns=["start", "end"])
-        .sort_values(["start", "end"])
-        .astype(float)
-    )
-
-
-def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
-    intervals_a = df_a.iloc[:, :2].values
-
-    mask = []
-    for start_a, end_a in intervals_a:
-        overlap = False
-        for start_b, end_b in intervals_a:
-            if (
-                (start_b < start_a < end_b < end_a)
-                or (start_a < start_b < end_a < end_b)
-                or ((start_a < start_b) and (end_b < end_a))
-            ):
-                overlap = True
-                break
-        mask.append(overlap)
-    return np.array(mask)
-
-
-def non_overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
-    if df_a.empty:
-        return df_a
-    mask = _overlap_mask_basic(df_a)
-    return df_a.loc[~mask]
-
-
-def overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
-    if df_a.empty:
-        return df_a
-    mask = _overlap_mask_basic(df_a)
-    return df_a.loc[mask]
-
-
-def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-    intervals_a = df_a.iloc[:, :2].values
-    intervals_b = df_b.iloc[:, :2].values
-
-    idxs_a, idxs_b = [], []
-    for idx_a, (start_a, end_a) in enumerate(intervals_a):
-        for idx_b, (start_b, end_b) in enumerate(intervals_b):
-            if (
-                (start_b < start_a < end_b < end_a)
-                or (start_a < start_b < end_a < end_b)
-                or ((start_a < start_b) and (end_b < end_a))
-            ):
-                idxs_a.append(idx_a)
-                idxs_b.append(idx_b)
-
-    result = np.concatenate([intervals_a[idxs_a], intervals_b[idxs_b]])
-    return (
-        pd.DataFrame(result, columns=["start", "end"])
-        .sort_values(["start", "end"])
-        .astype(float)
-    )
