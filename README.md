@@ -1,6 +1,9 @@
 # pandas-intervals
 Pandas extension for `DataFrame`s of intervals (AKA `spandas`).
 
+NOTE: Still very much a WIP!!
+
+
 This library provides `IntervalsFrames`: a standard interface for `DataFrames` of "interval"-like objects, where each object is specified by a `start` and an `end`. `IntervalsFrames` are `DataFrame`-like, but with some extras:
 * The columns `"start"` and `"end"` are automatically formatted as `float` types
 * The order of the columns is strictly as specified
