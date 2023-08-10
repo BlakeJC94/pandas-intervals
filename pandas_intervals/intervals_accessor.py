@@ -170,13 +170,13 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def overlap(self) -> pd.DataFrame:
         return intervals_overlap(
-            [self.df],
+            self.df,
             groupby_cols=self.groupby_cols,
         )
 
     def non_overlap(self) -> pd.DataFrame:
         return intervals_non_overlap(
-            [self.df],
+            self.df,
             groupby_cols=self.groupby_cols,
         )
 
@@ -272,32 +272,22 @@ def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
     return np.array(mask)
 
 
-# def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
-#     df = df.sort_values("start")
-#     starts, ends = df["start"].values, df["end"].values
-#     overlaps = starts[1:] - ends[:-1]
-#     mask = (overlaps < 0)
-#     mask = np.append(mask, mask[-1])
-#     return mask
-
-
 def intervals_overlap(
-    dfs: List[pd.DataFrame],
+    df: pd.DataFrame,
     groupby_cols: Optional[List[str]] = None,
 ):
-    intervals = pd.concat(dfs, axis=0)
-    if intervals.empty:
-        return intervals
+    if df.empty:
+        return df
 
     if groupby_cols is None:
         groupby_cols = []
 
     if len(groupby_cols) == 0:
-        mask = _get_overlapping_mask(intervals)
-        return intervals.loc[mask]
+        mask = _get_overlapping_mask(df)
+        return df.loc[mask]
 
     results = []
-    for _, df_group in intervals.groupby(groupby_cols):
+    for _, df_group in df.groupby(groupby_cols):
         mask = _get_overlapping_mask(df_group)
         result = df_group.loc[mask]
         results.append(result)
@@ -306,22 +296,21 @@ def intervals_overlap(
 
 # TODO reduce duplication
 def intervals_non_overlap(
-    dfs: List[pd.DataFrame],
+    df: pd.DataFrame,
     groupby_cols: Optional[List[str]] = None,
 ):
-    intervals = pd.concat(dfs, axis=0)
-    if intervals.empty:
-        return intervals
+    if df.empty:
+        return df
 
     if groupby_cols is None:
         groupby_cols = []
 
     if len(groupby_cols) == 0:
-        mask = _get_overlapping_mask(intervals)
-        return intervals.loc[~mask]
+        mask = _get_overlapping_mask(df)
+        return df.loc[~mask]
 
     results = []
-    for _, df_group in intervals.groupby(groupby_cols):
+    for _, df_group in df.groupby(groupby_cols):
         mask = _get_overlapping_mask(df_group)
         result = df_group.loc[~mask]
         results.append(result)
