@@ -159,50 +159,6 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         # TODO raise if plotly not installed
         pass
 
-    def union(self, *dfs) -> pd.DataFrame:
-        interval_sets = [self.df, *[self.format(df) for df in dfs]]
-        results = intervals_union(interval_sets)
-        results = sort_intervals(
-            results,
-            sort_cols=self.additional_cols,
-        )
-        return results.reset_index(drop=True)
-
-    def overlap(self) -> pd.DataFrame:
-        results = []
-        for _, df_group in _df_groups(self.df, self.groupby_cols):
-            results.append(intervals_overlap(df_group))
-        results = pd.concat(results, axis=0)
-        results = sort_intervals(
-            results,
-            sort_cols=self.additional_cols,
-        )
-        return results
-
-    def non_overlap(self) -> pd.DataFrame:
-        results = []
-        for _, df_group in _df_groups(self.df, self.groupby_cols):
-            results.append(intervals_non_overlap(df_group))
-        results = pd.concat(results, axis=0)
-        results = sort_intervals(
-            results,
-            sort_cols=self.additional_cols,
-        )
-        return results
-
-    def intersection(self, *dfs) -> pd.DataFrame:
-        return intervals_intersection(
-            [self.df, *[self.format(df) for df in dfs]],
-            groupby_cols=self.groupby_cols,
-        )
-
-    def combine(self, *dfs) -> pd.DataFrame:
-        return intervals_combine(
-            [self.df, *[self.format(df) for df in dfs]],
-            groupby_cols=self.groupby_cols,
-            aggregations=self.aggregations,
-        )
-
     def pad(
         self,
         pad: Optional[float] = None,
@@ -232,19 +188,94 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         self.df["end"] = self.df["end"] - right_unpad
         return self.df.loc[self.df["end"] - self.df["start"] >= 0]
 
+    def overlap(self) -> pd.DataFrame:
+        results = []
+        for _, df_group in _df_groups(self.df, self.groupby_cols):
+            results.append(intervals_overlap(df_group))
+        results = pd.concat(results, axis=0)
+        results = sort_intervals(
+            results,
+            sort_cols=self.additional_cols,
+        )
+        return results
+
+    def non_overlap(self) -> pd.DataFrame:
+        results = []
+        for _, df_group in _df_groups(self.df, self.groupby_cols):
+            results.append(intervals_non_overlap(df_group))
+        results = pd.concat(results, axis=0)
+        results = sort_intervals(
+            results,
+            sort_cols=self.additional_cols,
+        )
+        return results
+
+    # TODO complement (w configurable endpoints)
+    def complement(
+        self,
+        left_bound: Optional[float] = None,
+        right_bound: Optional[float] = None,
+    ):
+        results = []
+        for _, df_group in _df_groups(self.df, self.groupby_cols):
+            results.append(
+                intervals_complement(
+                    df_group,
+                    left_bound=left_bound,
+                    right_bound=right_bound,
+                )
+            )
+        results = pd.concat(results, axis=0)
+        results = sort_intervals(
+            results,
+            sort_cols=self.additional_cols,
+        )
+        return results
+
+    def union(self, *dfs) -> pd.DataFrame:
+        interval_sets = [self.df, *[self.format(df) for df in dfs]]
+        results = intervals_union(interval_sets)
+        results = sort_intervals(
+            results,
+            sort_cols=self.additional_cols,
+        )
+        return results.reset_index(drop=True)
+
+    # # TODO rethink this one... for df in dfs: ...
+    # # Intersections across groupsbys and each pair?
+    # # how should the _df_groups iter work in this case?
+    # def intersection(self, *dfs) -> pd.DataFrame:
+    #     dfs = [self.df, *[self.format(df) for df in dfs]]
+
+    #     results = []
+    #     for _, df_group in _df_groups(dfs, self.groupby_cols):
+    #         results.append(intervals_intersection(df_group))
+
+    #     results = pd.concat(results, axis=0)
+    #     results = sort_intervals(
+    #         results,
+    #         sort_cols=self.additional_cols,
+    #     )
+    #     return results
+
+    def combine(self, *dfs) -> pd.DataFrame:
+        df = self.union(*dfs)
+
+        results = []
+        for _, df_group in _df_groups(df, self.groupby_cols):
+            results.append(intervals_combine(df_group, aggregations=self.aggregations))
+
+        results = pd.concat(results, axis=0)
+        results = sort_intervals(
+            results,
+            sort_cols=self.additional_cols,
+        )
+        return results
+
     def diff(self, *dfs):
         return intervals_difference(
             self.df,
             [self.format(df) for df in dfs],
-            groupby_cols=self.groupby_cols,
-        )
-
-    # TODO complement (w configurable endpoints)
-    def complement(
-        self, left_bound: Optional[float] = None, right_bound: Optional[float] = None
-    ):
-        return intervals_complement(
-            self.df,
             groupby_cols=self.groupby_cols,
         )
 
@@ -261,6 +292,7 @@ def sort_intervals(
     result = df.sort_values(["start", "end", *sort_cols])
     return result
 
+
 def _df_groups(
     df: pd.DataFrame,
     groupby_cols: Optional[List[str]] = None,
@@ -269,6 +301,7 @@ def _df_groups(
     if len(groupby_cols) == 0:
         return [(0, df)]
     return df.groupby(groupby_cols)
+
 
 # TODO searchsorted implementation
 def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
@@ -345,10 +378,7 @@ def intervals_combine(
     return pd.concat(combined_labels).reset_index(drop=True)
 
 
-def intervals_intersection(
-    dfs: List[pd.DataFrame],
-    groupby_cols: Optional[List[str]] = None,
-):
+def intervals_intersection(dfs: List[pd.DataFrame]) -> pd.DataFrame:
     # TODO loop over each pair and computer intersection
     ...
 
