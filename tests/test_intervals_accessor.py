@@ -223,11 +223,15 @@ def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
 
 
 def non_overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
+    if df_a.empty:
+        return df_a
     mask = _overlap_mask_basic(df_a)
     return df_a.loc[~mask]
 
 
 def overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
+    if df_a.empty:
+        return df_a
     mask = _overlap_mask_basic(df_a)
     return df_a.loc[mask]
 
