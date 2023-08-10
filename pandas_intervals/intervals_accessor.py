@@ -168,15 +168,15 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
         return result.reset_index(drop=True)
 
-    def overlap(self, *dfs) -> pd.DataFrame:
+    def overlap(self) -> pd.DataFrame:
         return intervals_overlap(
-            [self.df, *[self.format(df) for df in dfs]],
+            [self.df],
             groupby_cols=self.groupby_cols,
         )
 
-    def non_overlap(self, *dfs) -> pd.DataFrame:
+    def non_overlap(self) -> pd.DataFrame:
         return intervals_non_overlap(
-            [self.df, *[self.format(df) for df in dfs]],
+            [self.df],
             groupby_cols=self.groupby_cols,
         )
 
