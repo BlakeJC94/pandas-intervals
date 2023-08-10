@@ -1,21 +1,29 @@
 """Examples of a few IntervalsFrame subclasses"""
-from __future__ import annotations
 
-from pandas_intervals.core import IntervalsFrame
+from pandas_intervals.intervals_accessor import IntervalsAccessor
 from pandas_intervals.utils import comma_join
 
+import pandas as pd
 
-class LabelsFrame(IntervalsFrame):
-    additional_fields = [
-        ("tag", "undefined", "groupby"),
-        ("study_id", "", "groupby"),
-        ("confidence", 0.0, "max"),
-        ("note", "", comma_join),
+
+@pd.api.extensions.register_dataframe_accessor("reg")  # Name of new accessor
+class RegionsAccessor(IntervalsAccessor):
+
+    # Additional required columns can be specified in a list of tuple
+    # where each tuple is `(column_name, dtype, aggregation)`
+    additional_cols = [
+        ("tag", "int64", "groupby"),
+        ("note", "object", lambda x: ','.join(x)),
     ]
 
+    # Default values for columns can be specified as a dictionary,
+    # columns that don't appear in this list are assumed to be necessary
+    default_values = {
+         "note": "",
+    }
 
-class RegionsFrame(IntervalsFrame):
-    additional_fields = [
-        ("study_id", "", "groupby"),
-        ("category", "", "groupby"),
-    ]
+    # Add whatever methods/properties you want!
+    def all_notes(self):
+        return self._obj["note"]
+
+    # TODO Add a constructor example
