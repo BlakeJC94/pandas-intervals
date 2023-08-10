@@ -1,4 +1,4 @@
-from typing import Callable, Union, List, Dict, Tuple, Any, Optional
+from typing import Callable, Iterable, Union, List, Dict, Tuple, Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -251,6 +251,14 @@ def sort_intervals(
     result = df.sort_values(["start", "end", *sort_cols])
     return result
 
+def _df_groups(
+    df: pd.DataFrame,
+    groupby_cols: Optional[List[str]] = None,
+) -> Iterable[Tuple[Any, pd.DataFrame]]:
+    groupby_cols = groupby_cols or []
+    if len(groupby_cols) == 0:
+        return [(0, df)]
+    return df.groupby(groupby_cols)
 
 # TODO searchsorted implementation
 def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
@@ -279,20 +287,13 @@ def intervals_overlap(
     if df.empty:
         return df
 
-    if groupby_cols is None:
-        groupby_cols = []
-
-    if len(groupby_cols) == 0:
-        mask = _get_overlapping_mask(df)
-        return df.loc[mask]
-
     results = []
-    for _, df_group in df.groupby(groupby_cols):
+    for _, df_group in _df_groups(df, groupby_cols):
         mask = _get_overlapping_mask(df_group)
         result = df_group.loc[mask]
         results.append(result)
-    return pd.concat(results, axis=0).sort_values("start")
 
+    return pd.concat(results, axis=0).sort_values(["start", "end"])
 
 # TODO reduce duplication
 def intervals_non_overlap(
@@ -302,19 +303,13 @@ def intervals_non_overlap(
     if df.empty:
         return df
 
-    if groupby_cols is None:
-        groupby_cols = []
-
-    if len(groupby_cols) == 0:
-        mask = _get_overlapping_mask(df)
-        return df.loc[~mask]
-
     results = []
-    for _, df_group in df.groupby(groupby_cols):
+    for _, df_group in _df_groups(df, groupby_cols):
         mask = _get_overlapping_mask(df_group)
         result = df_group.loc[~mask]
         results.append(result)
-    return pd.concat(results, axis=0).sort_values("start")
+
+    return pd.concat(results, axis=0).sort_values(["start", "end"])
 
 
 def intervals_combine(
