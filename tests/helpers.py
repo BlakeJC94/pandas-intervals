@@ -1,9 +1,15 @@
 from __future__ import annotations
-from typing import Union, List, Mapping, Optional
+from typing import Union, List, Mapping, Optional, Set, Any
 
 import pandas as pd
 import numpy as np
 
+def assert_df_interval_set_equality(df_a: pd.DataFrame, df_b: pd.DataFrame):
+    assert df_to_set(df_a) == df_to_set(df_b)
+
+
+def df_to_set(df: pd.DataFrame) -> Set[List[Any]]:
+    return set(df.itertuples(index=False, name=None))
 
 def intervals_from_str(
     intervals_str: Union[str, List[str]],
