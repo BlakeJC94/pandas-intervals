@@ -7,6 +7,7 @@ import pytest
 
 import pandas_intervals
 from tests.helpers import (
+    assert_df_interval_set_equality,
     random_intervals,
     overlap_basic,
     non_overlap_basic,
@@ -93,13 +94,13 @@ class TestIntervalsAccessor:
 
         expected = union_basic(df_a, df_b)
 
-        pd.testing.assert_frame_equal(
-            df_a_union_b.reset_index(drop=True),
-            df_b_union_a.reset_index(drop=True),
+        assert_df_interval_set_equality(
+            df_a_union_b,
+            df_b_union_a,
         )
-        pd.testing.assert_frame_equal(
-            df_a_union_b.reset_index(drop=True),
-            expected.reset_index(drop=True),
+        assert_df_interval_set_equality(
+            df_a_union_b,
+            expected,
         )
 
     def test_intervals_overlap(self):
@@ -112,18 +113,17 @@ class TestIntervalsAccessor:
         expected_overlap = overlap_basic(df_a)
         expected_non_overlap = non_overlap_basic(df_a)
 
-        pd.testing.assert_frame_equal(
+        assert_df_interval_set_equality(
             df_a_overlap,
             expected_overlap,
         )
-        pd.testing.assert_frame_equal(
+        assert_df_interval_set_equality(
             df_a_non_overlap,
             expected_non_overlap,
         )
 
-        result = pd.concat([df_a_overlap, df_a_non_overlap], axis=0)
-        pd.testing.assert_frame_equal(
-            result.sort_values("start"),
+        assert_df_interval_set_equality(
+            pd.concat([df_a_overlap, df_a_non_overlap], axis=0),
             df_a,
         )
 
