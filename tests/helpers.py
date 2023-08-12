@@ -1,15 +1,26 @@
 from __future__ import annotations
-from typing import Union, List, Mapping, Optional, Set, Any
+from typing import Union, List, Mapping, Optional, Set, Any, Tuple
+from itertools import product
 
 import pandas as pd
 import numpy as np
 
-def assert_df_interval_set_equality(df_a: pd.DataFrame, df_b: pd.DataFrame):
-    assert df_to_set(df_a) == df_to_set(df_b)
+
+def assert_df_interval_set_equality(df_expected: pd.DataFrame, df_output: pd.DataFrame):
+    set_expected = df_to_set(df_expected)
+    set_output = df_to_set(df_output)
+    assert len(set_expected) == len(set_output)
+    assert set_expected == set_output
+    assert len(df_expected) == len(df_output)
 
 
 def df_to_set(df: pd.DataFrame) -> Set[List[Any]]:
     return set(df.itertuples(index=False, name=None))
+
+
+def df_to_list(df: pd.DataFrame) -> Set[List[Any]]:
+    return list(df.itertuples(index=False, name=None))
+
 
 def intervals_from_str(
     intervals_str: Union[str, List[str]],
@@ -127,20 +138,22 @@ def random_intervals(
 
 
 def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
-    intervals_a = df_a.iloc[:, :2].values
+    intervals_a = df_to_list(df_a)
 
     mask = []
     for start_a, end_a in intervals_a:
         overlap = False
         for start_b, end_b in intervals_a:
             if (
-                (start_b < start_a < end_b < end_a)
-                or (start_a < start_b < end_a < end_b)
-                or ((start_a < start_b) and (end_b < end_a))
+                (start_a < start_b < end_a)
+                or (start_a < end_b < end_a)
+                or (start_b < start_a < end_b)
+                or (start_b < end_a < end_b)
             ):
                 overlap = True
                 break
         mask.append(overlap)
+
     return np.array(mask)
 
 
@@ -170,23 +183,21 @@ def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
 
 
 def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-    intervals_a = df_a.iloc[:, :2].values
-    intervals_b = df_b.iloc[:, :2].values
+    cols = df_a.columns
+    intervals_a = df_to_list(df_a)
+    intervals_b = df_to_list(df_b)
 
-    idxs_a, idxs_b = [], []
-    for idx_a, (start_a, end_a) in enumerate(intervals_a):
-        for idx_b, (start_b, end_b) in enumerate(intervals_b):
-            if (
-                (start_b < start_a < end_b < end_a)
-                or (start_a < start_b < end_a < end_b)
-                or ((start_a < start_b) and (end_b < end_a))
-            ):
-                idxs_a.append(idx_a)
-                idxs_b.append(idx_b)
+    result = set()
+    for ivl_a, ivl_b in product(intervals_a, intervals_b):
+        start_a, end_a, *_ = ivl_a
+        start_b, end_b, *_ = ivl_b
+        if (
+            (start_a < start_b < end_a)
+            or (start_a < end_b < end_a)
+            or (start_b < start_a < end_b)
+            or (start_b < end_a < end_b)
+        ):
+            result.add(ivl_a)
+            result.add(ivl_b)
 
-    result = np.concatenate([intervals_a[idxs_a], intervals_b[idxs_b]])
-    return (
-        pd.DataFrame(result, columns=["start", "end"])
-        .sort_values(["start", "end"])
-        .astype(float)
-    )
+    return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
