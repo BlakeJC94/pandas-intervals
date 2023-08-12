@@ -3,6 +3,7 @@ import pandas as pd
 
 from tests.helpers import (
     assert_df_interval_set_equality,
+    combine_basic,
     intervals_from_str,
     overlap_basic,
     non_overlap_basic,
@@ -38,8 +39,12 @@ cases = [
         non_overlap_b=[
             " (--]   (---]          (----]    (---]    (------] (---] ",
         ],
-        combine=[],
-        diff=[],
+        combine=[
+            " (--](------]  (----]  (----] (------------------] (---] ",
+        ],
+        complement_a=[],  # TODO
+        complement_b=[],  # TODO
+        diff=[],  # TODO
     ),
     # dict(
     #     A=[
@@ -121,3 +126,11 @@ class TestBasicOps:
 
         assert_df_interval_set_equality(df_expected_a, non_overlap_basic(df_a))
         assert_df_interval_set_equality(df_expected_b, non_overlap_basic(df_b))
+
+    def test_combine(self, test_case):
+        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
+        df_expected = intervals_from_str(test_case["combine"]).ivl().drop(columns=["tag"])
+
+        assert_df_interval_set_equality(df_expected, combine_basic(union_basic(df_a, df_b)))
+        assert_df_interval_set_equality(df_expected, combine_basic(union_basic(df_b, df_a)))
