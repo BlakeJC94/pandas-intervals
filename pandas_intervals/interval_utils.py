@@ -1,26 +1,14 @@
-from typing import Callable, Iterable, Union, List, Dict, Tuple, Any, Optional
+from typing import Union, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
 
+from tests.helpers import _overlap_mask_basic
+
+
 # TODO searchsorted implementation
 def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
-    df = df.sort_values("start")
-    intervals_a = df.iloc[:, :2].values
-
-    mask = []
-    for start_a, end_a in intervals_a:
-        overlap = False
-        for start_b, end_b in intervals_a:
-            if (
-                (start_b < start_a < end_b < end_a)
-                or (start_a < start_b < end_a < end_b)
-                or ((start_a < start_b) and (end_b < end_a))
-            ):
-                overlap = True
-                break
-        mask.append(overlap)
-    return np.array(mask)
+    return _overlap_mask_basic(df)
 
 
 # TODO Remove duplication
@@ -89,4 +77,3 @@ def _atomize_intervals(
         interval_idxs = interval_idxs[mask_above_min_len]
 
     return atomized_intervals, interval_idxs
-

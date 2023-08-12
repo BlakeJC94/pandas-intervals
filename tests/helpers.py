@@ -199,3 +199,11 @@ def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
             result.add(ivl_b)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
+
+
+def complement_basic(
+    df_a: pd.DataFrame,
+    left_bound: Optional[float] = None,
+    right_bound: Optional[float] = None,
+):
+    ...

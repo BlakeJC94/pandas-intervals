@@ -7,17 +7,23 @@ from .interval_utils import (
     _get_overlapping_mask,
     _atomize_intervals,
 )
+from tests.helpers import (
+    intersection_basic,
+    complement_basic,
+)
 
 
 def intervals_union(dfs: List[pd.DataFrame]) -> pd.DataFrame:
     return pd.concat(dfs, axis=0).drop_duplicates()
 
 
+# TODO Upgrade to vectorised version
 def intervals_intersection(dfs: List[pd.DataFrame]) -> pd.DataFrame:
-    # TODO loop over each pair and computer intersection
-    ...
+    df_a, df_b = dfs[0], intervals_union(*dfs[1:])
+    return intersection_basic(df_a, df_b)
 
 
+# TODO Upgrade to vectorised version
 def intervals_complement(
     df: pd.DataFrame,
     groupby_cols: Optional[List[str]] = None,
@@ -32,6 +38,7 @@ def intervals_complement(
     return intervals_union(result, groupby_cols)
 
 
+# TODO Upgrade to vectorised version
 def intervals_overlap(
     df: pd.DataFrame,
 ):
@@ -40,6 +47,7 @@ def intervals_overlap(
     return df.loc[_get_overlapping_mask(df)]
 
 
+# TODO Upgrade to vectorised version
 def intervals_non_overlap(
     df: pd.DataFrame,
 ):
