@@ -25,17 +25,16 @@ def intervals_intersection(dfs: List[pd.DataFrame]) -> pd.DataFrame:
 
 # TODO Upgrade to vectorised version
 def intervals_complement(
-    df: pd.DataFrame,
-    groupby_cols: Optional[List[str]] = None,
+    dfs: List[pd.DataFrame],
+    left_bound: Optional[float] = None,
+    right_bound: Optional[float] = None,
 ):
-    df = intervals_combine(df, groupby_cols)
-    result = []
-    for vals, df_group in df.groupby(groupby_cols):
-        ...
-        # TODO append and prepend zero duration labels
-        # TODO get starts and ends
-        # TODO Append to results
-    return intervals_union(result, groupby_cols)
+    df = intervals_combine(dfs)
+    return complement_basic(
+        df,
+        left_bound,
+        right_bound,
+    )
 
 
 # TODO Upgrade to vectorised version
