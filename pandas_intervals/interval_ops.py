@@ -8,6 +8,7 @@ from .interval_utils import (
     _atomize_intervals,
 )
 from tests.helpers import (
+    combine_basic,
     intersection_basic,
     complement_basic,
 )
@@ -60,38 +61,8 @@ def intervals_combine(
     groupby_cols: Optional[List[str]] = None,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
-    intervals = intervals_union(dfs, groupby_cols)
-    if intervals.empty:
-        return intervals
-
-    if aggregations is None:
-        aggregations = {}
-
-    aggregations = {c: "first" for c in intervals.columns if c not in aggregations}
-
-    combined_labels = []
-    for _, interval_group in intervals.groupby(groupby_cols, as_index=False):
-        interval_group_sorted = interval_group.sort_values("start")
-
-        # TODO Vectorise this
-        # Loop over labels and compare each to the previous label to find labels to combine
-        group_inds = []
-        ind, interval_end_time = 0, 0
-        for start, end in interval_group_sorted[["start", "end"]].values:
-            # If interval is within previous label, combine them
-            if start <= interval_end_time:
-                interval_end_time = max(interval_end_time, end)
-                group_inds.append(ind)
-            # If not, start a new interval
-            else:
-                interval_end_time = end
-                ind += 1
-                group_inds.append(ind)
-
-        grpd_labels = interval_group_sorted.groupby(group_inds).agg(aggregations)
-        combined_labels.append(grpd_labels)
-
-    return pd.concat(combined_labels).reset_index(drop=True)
+    df = intervals_union(dfs)
+    return combine_basic(df, aggregations)
 
 
 def intervals_difference(
