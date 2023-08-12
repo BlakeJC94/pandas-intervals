@@ -172,16 +172,12 @@ def non_overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
 
 
 def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-    intervals_a = df_a.iloc[:, :2].values
-    intervals_b = df_b.iloc[:, :2].values
+    cols = df_a.columns
+    intervals_a = df_to_set(df_a)
+    intervals_b = df_to_set(df_b)
 
-    result = np.concatenate([intervals_a, intervals_b])
-    result = np.unique(result, axis=0)
-    return (
-        pd.DataFrame(result, columns=["start", "end"])
-        .sort_values(["start", "end"])
-        .astype(float)
-    )
+    result = intervals_a.union(intervals_b)
+    return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
 
 
 def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
