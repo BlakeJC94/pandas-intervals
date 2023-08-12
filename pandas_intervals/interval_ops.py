@@ -19,8 +19,7 @@ def intervals_union(dfs: List[pd.DataFrame]) -> pd.DataFrame:
 
 
 # TODO Upgrade to vectorised version
-def intervals_intersection(dfs: List[pd.DataFrame]) -> pd.DataFrame:
-    df_a, df_b = dfs[0], intervals_union(*dfs[1:])
+def intervals_intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     return intersection_basic(df_a, df_b)
 
 
@@ -58,7 +57,6 @@ def intervals_non_overlap(
 
 def intervals_combine(
     dfs: List[pd.DataFrame],
-    groupby_cols: Optional[List[str]] = None,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
     df = intervals_union(dfs)

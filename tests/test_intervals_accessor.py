@@ -127,7 +127,6 @@ class TestIntervalsAccessor:
             df_a,
         )
 
-    @pytest.mark.skip
     def test_intervals_intersection(self):
         """Test an interval intersection can be computed between two `DataFrame`s of intervals."""
         # TODO Re-enable prop-based test once debugged
@@ -155,13 +154,12 @@ class TestIntervalsAccessor:
 
         expected = intersection_basic(df_a, df_b)
 
-        pd.testing.assert_frame_equal(
-            df_a_intersection_b.reset_index(drop=True),
-            df_b_intersection_a.reset_index(drop=True),
+        assert_df_interval_set_equality(
+            df_a_intersection_b,
+            df_b_intersection_a,
         )
-        breakpoint()
-        pd.testing.assert_frame_equal(
-            df_a_intersection_b.reset_index(drop=True),
-            expected.reset_index(drop=True),
+
+        assert_df_interval_set_equality(
+            df_a_intersection_b,
+            expected,
         )
-        ...

@@ -251,22 +251,31 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
         return results.reset_index(drop=True)
 
-    # # TODO rethink this one... for df in dfs: ...
-    # # Intersections across groupsbys and each pair?
-    # # how should the _df_groups iter work in this case?
-    # def intersection(self, *dfs) -> pd.DataFrame:
-    #     dfs = [self.df, *[self.format(df) for df in dfs]]
+    # IDEA: Re-arrange to loop over smallest df
+    def intersection(self, *dfs) -> pd.DataFrame:
+        # df_results = self.df
+        # for df in dfs:
+        #     results = []
+        #     for group, df_group in _df_groups(self.df, self.groupby_cols):
+        #         if group is not None:
+        #             df = df[(df[self.groupby_cols] == group).all(axis=1)]
+        #         results.append(intervals_intersection(df_results, df))
 
-    #     results = []
-    #     for _, df_group in _df_groups(dfs, self.groupby_cols):
-    #         results.append(intervals_intersection(df_group))
 
-    #     results = pd.concat(results, axis=0)
-    #     results = sort_intervals(
-    #         results,
-    #         sort_cols=self.additional_cols,
-    #     )
-    #     return results
+
+        results = []
+        for group, df_group in _df_groups(self.df, self.groupby_cols):
+            result = df_group
+            for df in dfs:
+                if group is not None:
+                    df = df[(df[self.groupby_cols] == group).all(axis=1)]
+                if df.empty:
+                    result = df
+                    break
+                result = intervals_intersection(result, df)
+            results.append(result)
+
+        return pd.concat(results, axis=0)
 
     def combine(self, *dfs) -> pd.DataFrame:
         df = self.union(*dfs)
@@ -305,5 +314,5 @@ def _df_groups(
 ) -> Iterable[Tuple[Any, pd.DataFrame]]:
     groupby_cols = groupby_cols or []
     if len(groupby_cols) == 0:
-        return [(0, df)]
+        return [(None, df)]
     return df.groupby(groupby_cols)
