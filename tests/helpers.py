@@ -7,6 +7,8 @@ import numpy as np
 
 
 def assert_df_interval_set_equality(df_expected: pd.DataFrame, df_output: pd.DataFrame):
+    df_expected = df_expected.astype(dict(start=float, end=float))
+    df_output = df_output.astype(dict(start=float, end=float))
     set_expected = df_to_set(df_expected)
     set_output = df_to_set(df_output)
     assert len(set_expected) == len(set_output)
