@@ -123,7 +123,7 @@ class TestIntervalsAccessor:
         )
 
         assert_df_interval_set_equality(
-            pd.concat([df_a_overlap, df_a_non_overlap], axis=0),
+            df_a_overlap.ivl.union(df_a_non_overlap),
             df_a,
         )
 

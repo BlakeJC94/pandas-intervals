@@ -200,14 +200,14 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def overlap(self) -> pd.DataFrame:
         results = []
-        for _, df_groups in _df_groups(self.df, groupby_cols=self.groupby_cols):
-            results.append(intervals_overlap(df_groups[0]))
+        for _, (df_a,) in _df_groups(self.df, groupby_cols=self.groupby_cols):
+            results.append(intervals_overlap(df_a))
         return pd.concat(results, axis=0)
 
     def non_overlap(self) -> pd.DataFrame:
         results = []
-        for _, df_groups in _df_groups(self.df, groupby_cols=self.groupby_cols):
-            results.append(intervals_non_overlap(df_groups[0]))
+        for _, (df_a,) in _df_groups(self.df, groupby_cols=self.groupby_cols):
+            results.append(intervals_non_overlap(df_a))
         return pd.concat(results, axis=0)
 
     # TODO complement (w configurable endpoints)
@@ -217,10 +217,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         right_bound: Optional[float] = None,
     ):
         results = []
-        for _, df_groups in _df_groups(self.df, groupby_cols=self.groupby_cols):
+        for _, (df_a,) in _df_groups(self.df, groupby_cols=self.groupby_cols):
             results.append(
                 intervals_complement(
-                    df_groups[0],
+                    df_a,
                     left_bound=left_bound,
                     right_bound=right_bound,
                 )
@@ -245,8 +245,8 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         df = self.format(df)
 
         results = []
-        for _, df_groups in _df_groups(self.df, df, groupby_cols=self.groupby_cols):
-            result = intervals_intersection(df_groups[0], df_groups[1])
+        for _, (df_a, df_b) in _df_groups(self.df, df, groupby_cols=self.groupby_cols):
+            result = intervals_intersection(df_a, df_b)
             results.append(result)
 
         return pd.concat(results, axis=0)
@@ -255,22 +255,20 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         df = self.union(self.df, df)
 
         results = []
-        for _, df_groups in _df_groups(df, groupby_cols=self.groupby_cols):
-            results.append(
-                intervals_combine(df_groups[0], aggregations=self.aggregations)
-            )
+        for _, (df_a,) in _df_groups(df, groupby_cols=self.groupby_cols):
+            results.append(intervals_combine(df_a, aggregations=self.aggregations))
 
         return pd.concat(results, axis=0)
 
     def diff(self, df: pd.DataFrame):
         results = []
-        for _, df_groups in _df_groups(
+        for _, (df_a, df_b) in _df_groups(
             self.df, self.format(df), groupby_cols=self.groupby_cols
         ):
             results.append(
                 intervals_difference(
-                    df_groups[0],
-                    df_groups[1],
+                    df_a,
+                    df_b,
                 )
             )
         return pd.concat(results, axis=0)
