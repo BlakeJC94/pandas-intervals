@@ -129,25 +129,8 @@ class TestIntervalsAccessor:
 
     def test_intervals_intersection(self):
         """Test an interval intersection can be computed between two `DataFrame`s of intervals."""
-        # TODO Re-enable prop-based test once debugged
-        # df_a = random_intervals(n_intervals=random.randint(0, 12))
-        # df_b = random_intervals(n_intervals=random.randint(0, 12))
-
-        df_a = pd.DataFrame(
-            [
-                [20.88, 56.74],
-                [57.61, 108.3],
-                [110.37, 123.21],
-                [127.73, 180.88],
-                [188.3, 240.22],
-                [233.43, 274.27],
-                [279.44, 326.84],
-                [325.86, 338.04],
-                [331.45, 365.37],
-                [365.46, 386.41],
-            ]
-        ).ivl()
-        df_b = pd.DataFrame.ivl.empty()
+        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_b = random_intervals(n_intervals=random.randint(0, 12))
 
         df_a_intersection_b = df_a.ivl.intersection(df_b)
         df_b_intersection_a = df_b.ivl.intersection(df_a)
