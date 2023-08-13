@@ -78,25 +78,20 @@ def intervals_difference(
 
     intervals_a = intervals_combine([df], groupby_cols)
 
-    # TODO Fix groupby to select vals in intervals_b
-    results = []
-    for _, intervals_a_group in intervals_a.groupby(groupby_cols):
-        input_columns = df.columns
-        intervals_a_metadata = df.drop(["start", "end"], axis=1)
+    input_columns = df.columns
+    intervals_a_metadata = df.drop(["start", "end"], axis=1)
 
-        intervals_a = intervals_a[["start", "end"]].values.copy()
-        intervals_b = intervals_b[["start", "end"]].values.copy()
+    intervals_a = intervals_a[["start", "end"]].values.copy()
+    intervals_b = intervals_b[["start", "end"]].values.copy()
 
-        atoms, indices = _atomize_intervals(
-            [intervals_a, intervals_b],
-            drop_gaps=False,
-            min_len=min_len,
-        )
-        mask_a_atoms = (indices[:, 0] != -1) & (indices[:, 1] == -1)
-        result, indices = atoms[mask_a_atoms], indices[mask_a_atoms, 0]
+    atoms, indices = _atomize_intervals(
+        [intervals_a, intervals_b],
+        drop_gaps=False,
+        min_len=min_len,
+    )
+    mask_a_atoms = (indices[:, 0] != -1) & (indices[:, 1] == -1)
+    result, indices = atoms[mask_a_atoms], indices[mask_a_atoms, 0]
 
-        intervals_a_diff_b = intervals_a_metadata.iloc[indices].reset_index(drop=True)
-        intervals_a_diff_b[["start", "end"]] = result
-        results.append(intervals_a_diff_b[input_columns])
-
-    return intervals_union(result, groupby_cols)
+    intervals_a_diff_b = intervals_a_metadata.iloc[indices].reset_index(drop=True)
+    intervals_a_diff_b[["start", "end"]] = result
+    return intervals_a_diff_b[input_columns]

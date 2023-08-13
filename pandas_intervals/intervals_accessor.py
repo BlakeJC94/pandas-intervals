@@ -225,12 +225,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
                     right_bound=right_bound,
                 )
             )
-        results = pd.concat(results, axis=0)
-        results = sort_intervals(
-            results,
-            sort_cols=self.additional_cols,
-        )
-        return results
+        return pd.concat(results, axis=0)
 
     def union(self, *dfs) -> pd.DataFrame:
         interval_sets = [self.df, *[self.format(df) for df in dfs]]

@@ -200,6 +200,7 @@ def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
 
+
 def combine_basic(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
@@ -229,15 +230,39 @@ def combine_basic(
 
     return df_sorted.groupby(group_inds).agg(aggregations)
 
-# TODO finish this
+
 def complement_basic(
     df_a: pd.DataFrame,
+    aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
     left_bound: Optional[float] = None,
     right_bound: Optional[float] = None,
 ):
     if left_bound is None:
-        left_bound = df_a['start'].min()
+        left_bound = df_a["start"].min()
     if right_bound is None:
-        right_bound = df_a['end'].max()
+        right_bound = df_a["end"].max()
 
-    ...
+    if len(df_a) == 0:
+        interval = (
+            left_bound,
+            right_bound,
+            *[None for _ in range(len(df_a.columns) - 2)],
+        )
+        return pd.DataFrame([interval], columns=df_a.columns)
+
+    intervals = list(
+        combine_basic(df_a, aggregations=aggregations)
+        .sort_values(["start", "end"])
+        .itertuples(index=False, name=None)
+    )
+
+    last_end = left_bound
+    results = []
+    for start, end, *metadata in intervals:
+        results.append((last_end, start, *metadata))
+        last_end = end
+
+    if right_bound > last_end:
+        results.append((last_end, right_bound, *intervals[-1][2:]))
+
+    return pd.DataFrame(results, columns=df_a.columns)
