@@ -179,6 +179,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             if left_pad is not None or right_pad is not None:
                 raise ValueError("Either use `pad`, or `left_pad`/`right_pad`.")
             left_pad, right_pad = pad, pad
+
         self.df["start"] = self.df["start"] - left_pad
         self.df["end"] = self.df["end"] + right_pad
         return self.df
@@ -210,7 +211,6 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             results.append(intervals_non_overlap(df_a))
         return pd.concat(results, axis=0)
 
-    # TODO complement (w configurable endpoints)
     def complement(
         self,
         left_bound: Optional[float] = None,
@@ -227,22 +227,23 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             )
         return pd.concat(results, axis=0)
 
-    def union(self, *dfs) -> pd.DataFrame:
-        interval_sets = [self.df, *[self.format(df) for df in dfs]]
-        results = intervals_union(interval_sets)
+    def sort(self) -> pd.DataFrame:
         results = sort_intervals(
-            results,
+            self.df,
             sort_cols=self.additional_cols,
         )
         return results.reset_index(drop=True)
+
+    def union(self, *dfs) -> pd.DataFrame:
+        interval_sets = [self.df, *[self.format(df) for df in dfs]]
+        return intervals_union(interval_sets)
 
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self.format(df)
 
         results = []
         for _, (df_a, df_b) in _df_groups(self.df, df, groupby_cols=self.groupby_cols):
-            result = intervals_intersection(df_a, df_b)
-            results.append(result)
+            results.append(intervals_intersection(df_a, df_b))
 
         return pd.concat(results, axis=0)
 
