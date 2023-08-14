@@ -8,6 +8,7 @@ import pytest
 import pandas_intervals
 from tests.helpers import (
     assert_df_interval_set_equality,
+    complement_basic,
     random_intervals,
     overlap_basic,
     non_overlap_basic,
@@ -129,7 +130,27 @@ class TestIntervalsAccessor:
             df_a,
         )
 
-    # def test_intervals_complement(self):  # TODO
+    def test_intervals_complement(self):
+        df_a = random_intervals(n_intervals=random.randint(0, 12))
+
+        kwargs = [
+            ('left_bound', df_a['start'].min() * (0.5 + random.random())),
+            ('right_bound', df_a['end'].max() * (0.5 + random.random())),
+        ]
+        kwargs = dict(random.sample(kwargs, k=random.randint(0, len(kwargs))))
+
+        df_a_complement = df_a.ivl.complement(**kwargs)
+        expected_complement = complement_basic(df_a, **kwargs)
+
+        assert_df_interval_set_equality(
+            df_a_complement,
+            expected_complement,
+        )
+
+        assert_df_interval_set_equality(
+            df_a_complement.ivl.intersection(df_a),
+            pd.DataFrame().ivl(),
+        )
 
     def test_intervals_union(self):
         """Test an interval union can be computed between two `DataFrame`s of intervals."""
