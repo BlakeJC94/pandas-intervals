@@ -176,6 +176,20 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
         return results.reset_index(drop=True)
 
+    def contains(self, df: pd.DataFrame) -> bool:
+        df = self.format(df).drop_duplicates()
+        df_all = intervals_union(self.df, df)
+
+        n_union = len(intervals_union)
+        n_concat= len(
+            pd.concat(
+                [df_all, self.format(df)],
+                axis=0,
+            ).drop_duplicates()
+        )
+
+        return n_union == n_concat
+
     def pad(
         self,
         pad: Optional[float] = None,
@@ -272,8 +286,6 @@ def sort_intervals(
     sort_cols = sort_cols if sort_cols is not None else []
     result = df.sort_values(["start", "end", *sort_cols])
     return result
-
-
 
 
 def _df_groups(
