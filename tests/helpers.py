@@ -231,38 +231,40 @@ def combine_basic(
     return df_sorted.groupby(group_inds).agg(aggregations)
 
 
+# TODO Fix bounds logic
 def complement_basic(
     df_a: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
     left_bound: Optional[float] = None,
     right_bound: Optional[float] = None,
 ):
-    if left_bound is None:
-        left_bound = df_a["start"].min()
-    if right_bound is None:
-        right_bound = df_a["end"].max()
-
     if len(df_a) == 0:
-        interval = (
-            left_bound,
-            right_bound,
-            *[None for _ in range(len(df_a.columns) - 2)],
-        )
-        return pd.DataFrame([interval], columns=df_a.columns)
+        return df_a
 
+    df_a = combine_basic(df_a, aggregations=aggregations)
     intervals = list(
-        combine_basic(df_a, aggregations=aggregations)
-        .sort_values(["start", "end"])
+        df_a
+        .sort_values(["start"])
         .itertuples(index=False, name=None)
     )
 
-    last_end = left_bound
-    results = []
-    for start, end, *metadata in intervals:
-        results.append((last_end, start, *metadata))
-        last_end = end
+    start_first, end_first, *metadata_first = intervals[0]
+    _start_last, end_last, *metadata_last = intervals[-1]
+    if left_bound is None:
+        left_bound = end_first
+    if right_bound is None:
+        right_bound = end_last
 
-    if right_bound > last_end:
-        results.append((last_end, right_bound, *intervals[-1][2:]))
+    results = []
+    if left_bound < start_first:
+        results.append((left_bound, start_first, *metadata_first))
+
+    for i in range(len(intervals) - 1):
+        start_prev, end_prev, *metadata = intervals[i]
+        start_next, end_next, *_ = intervals[i + 1]
+        results.append((end_prev, start_next, *metadata_first))
+
+    if end_last < right_bound:
+        results.append((end_last, right_bound, *metadata_last))
 
     return pd.DataFrame(results, columns=df_a.columns)
