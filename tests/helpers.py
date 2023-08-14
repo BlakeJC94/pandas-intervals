@@ -96,7 +96,9 @@ def intervals_from_str(
         list(zip(starts, ends, tags)), columns=["start", "end", "tag"]
     )
     intervals[["start", "end"]] = intervals[["start", "end"]].astype(float)
-    if tags_map:
+    if all(t == default_tag for t in tags):
+        intervals = intervals.drop(columns=['tag'])
+    elif tags_map:
         intervals["tag"] = intervals["tag"].replace(tags_map)
     return intervals
 
@@ -143,9 +145,9 @@ def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
     intervals_a = df_to_list(df_a)
 
     mask = []
-    for start_a, end_a in intervals_a:
+    for start_a, end_a, *_ in intervals_a:
         overlap = False
-        for start_b, end_b in intervals_a:
+        for start_b, end_b, *_ in intervals_a:
             if (
                 (start_a < start_b < end_a)
                 or (start_a < end_b < end_a)
@@ -241,7 +243,7 @@ def complement_basic(
         return df_a
 
     df_a = combine_basic(df_a, aggregations=aggregations).sort_values("start")
-    intervals = list(df_a.itertuples(index=False, name=None))
+    intervals = df_to_list(df_a)
 
     start_first, end_first, *metadata_first = intervals[0]
     _start_last, end_last, *metadata_last = intervals[-1]
@@ -275,8 +277,8 @@ def diff_basic(
 
     df_a = combine_basic(df_a, aggregations=aggregations).sort_values("start")
     df_b = combine_basic(df_b, aggregations=aggregations).sort_values("start")
-    intervals_a = list(df_a.itertuples(index=False, name=None))
-    intervals_b = list(df_b.itertuples(index=False, name=None))
+    intervals_a = df_to_list(df_a)
+    intervals_b = df_to_list(df_b)
 
     results = []
     for start_a, end_a, *metadata in intervals_a:
