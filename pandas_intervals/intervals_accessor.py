@@ -169,6 +169,13 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         # TODO raise if plotly not installed
         pass
 
+    def sort(self) -> pd.DataFrame:
+        results = sort_intervals(
+            self.df,
+            sort_cols=self.additional_cols,
+        )
+        return results.reset_index(drop=True)
+
     def pad(
         self,
         pad: Optional[float] = None,
@@ -200,73 +207,61 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return self.df.loc[self.df["end"] - self.df["start"] >= 0]
 
     def overlap(self) -> pd.DataFrame:
-        results = []
-        for _, (df_a,) in _df_groups(self.df, groupby_cols=self.groupby_cols):
-            results.append(intervals_overlap(df_a))
-        return pd.concat(results, axis=0)
+        return self._apply_operation_to_groups(
+            intervals_overlap,
+            [self.df],
+        )
 
     def non_overlap(self) -> pd.DataFrame:
-        results = []
-        for _, (df_a,) in _df_groups(self.df, groupby_cols=self.groupby_cols):
-            results.append(intervals_non_overlap(df_a))
-        return pd.concat(results, axis=0)
+        return self._apply_operation_to_groups(
+            intervals_non_overlap,
+            [self.df],
+        )
 
     def complement(
         self,
         left_bound: Optional[float] = None,
         right_bound: Optional[float] = None,
     ):
-        results = []
-        for _, (df_a,) in _df_groups(self.df, groupby_cols=self.groupby_cols):
-            results.append(
-                intervals_complement(
-                    df_a,
-                    left_bound=left_bound,
-                    right_bound=right_bound,
-                )
-            )
-        return pd.concat(results, axis=0)
-
-    def sort(self) -> pd.DataFrame:
-        results = sort_intervals(
-            self.df,
-            sort_cols=self.additional_cols,
+        return self._apply_operation_to_groups(
+            intervals_complement,
+            [self.df],
+            left_bound=left_bound,
+            right_bound=right_bound,
         )
-        return results.reset_index(drop=True)
 
     def union(self, *dfs) -> pd.DataFrame:
         interval_sets = [self.df, *[self.format(df) for df in dfs]]
         return intervals_union(interval_sets)
 
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = self.format(df)
-
-        results = []
-        for _, (df_a, df_b) in _df_groups(self.df, df, groupby_cols=self.groupby_cols):
-            results.append(intervals_intersection(df_a, df_b))
-
-        return pd.concat(results, axis=0)
+        return self._apply_operation_to_groups(
+            intervals_intersection,
+            [self.df, self.format(df)],
+        )
 
     def combine(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = self.union(self.df, df)
-
-        results = []
-        for _, (df_a,) in _df_groups(df, groupby_cols=self.groupby_cols):
-            results.append(intervals_combine(df_a, aggregations=self.aggregations))
-
-        return pd.concat(results, axis=0)
+        return self._apply_operation_to_groups(
+            intervals_combine,
+            [self.union(self.df, df)],
+            aggregations=self.aggregations,
+        )
 
     def diff(self, df: pd.DataFrame):
+        return self._apply_operation_to_groups(
+            intervals_difference,
+            [self.df, self.format(df)],
+        )
+
+    def _apply_operation_to_groups(
+        self,
+        operation: Callable,
+        dfs: List[pd.DataFrame],
+        **kwargs,
+    ) -> pd.DataFrame:
         results = []
-        for _, (df_a, df_b) in _df_groups(
-            self.df, self.format(df), groupby_cols=self.groupby_cols
-        ):
-            results.append(
-                intervals_difference(
-                    df_a,
-                    df_b,
-                )
-            )
+        for _, df_groups in _df_groups(dfs, groupby_cols=self.groupby_cols):
+            results.append(operation(*df_groups, **kwargs))
         return pd.concat(results, axis=0)
 
 
@@ -279,8 +274,10 @@ def sort_intervals(
     return result
 
 
+
+
 def _df_groups(
-    *dfs: pd.DataFrame,
+    dfs: List[pd.DataFrame],
     groupby_cols: Optional[List[str]] = None,
 ) -> Iterable[Tuple[Any, List[pd.DataFrame]]]:
     groupby_cols = groupby_cols or []
