@@ -231,7 +231,6 @@ def combine_basic(
     return df_sorted.groupby(group_inds).agg(aggregations)
 
 
-# TODO Fix bounds logic
 def complement_basic(
     df_a: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
@@ -241,12 +240,8 @@ def complement_basic(
     if len(df_a) == 0:
         return df_a
 
-    df_a = combine_basic(df_a, aggregations=aggregations)
-    intervals = list(
-        df_a
-        .sort_values(["start"])
-        .itertuples(index=False, name=None)
-    )
+    df_a = combine_basic(df_a, aggregations=aggregations).sort_values("start")
+    intervals = list(df_a.itertuples(index=False, name=None))
 
     start_first, end_first, *metadata_first = intervals[0]
     _start_last, end_last, *metadata_last = intervals[-1]
@@ -260,11 +255,78 @@ def complement_basic(
         results.append((left_bound, start_first, *metadata_first))
 
     for i in range(len(intervals) - 1):
-        start_prev, end_prev, *metadata = intervals[i]
-        start_next, end_next, *_ = intervals[i + 1]
-        results.append((end_prev, start_next, *metadata_first))
+        _start_prev, end_prev, *metadata = intervals[i]
+        start_next, _end_next, *_ = intervals[i + 1]
+        results.append((end_prev, start_next, *metadata))
 
     if end_last < right_bound:
         results.append((end_last, right_bound, *metadata_last))
+
+    return pd.DataFrame(results, columns=df_a.columns)
+
+
+def diff_basic(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+    aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
+):
+    if len(df_a) == 0 or len(df_b) == 0:
+        return df_a
+
+    df_a = combine_basic(df_a, aggregations=aggregations).sort_values("start")
+    df_b = combine_basic(df_b, aggregations=aggregations).sort_values("start")
+    intervals_a = list(df_a.itertuples(index=False, name=None))
+    intervals_b = list(df_b.itertuples(index=False, name=None))
+
+    results = []
+    for start_a, end_a, *metadata in intervals_a:
+        keep_label = True
+
+        # check overlap of selected interval in `a` with bounding intervals in B
+        for start_b, end_b, *_ in intervals_b:
+
+            # A :          (----]
+            # B : (----]
+            # If `b` is strictly before `a`, check the interval in `B`
+            if end_b <= start_a:
+                continue
+
+            # A : (----]
+            # B :          (----]
+            # If `b` is strictly after the selected label, go to next interval in `A`
+            if end_a < start_b:
+                break
+
+            # A :     (----]
+            # B :  (----------]
+            # If `b` contains `a`, discard `a` and go to next interval in `A`
+            if start_b <= start_a and end_a <= end_b:
+                keep_label = False
+                break
+
+            # A :       (------)
+            # B :   (------)
+            # If `b` overlaps start of `a`, clip `a` start and check next interval in `B`
+            if start_b <= start_a and end_b <= end_a:
+                start_a = end_b
+                continue
+
+            # A :   (-----------...
+            # B :      (----)
+            # If `b` is contained in `a`, create interval, clip `a`, and check next interval in `b`
+            if start_a <= start_b and end_b < end_a:
+                results.append((start_a, start_b, *metadata))
+                start_a = end_b
+                continue
+
+            # A :   (------)
+            # B :       (------)
+            # If `b` overlaps end of `a`, clip end of `a` and go to next interval in `A`
+            if start_a <= start_b and end_a <= end_b:
+                end_a = start_b
+                break
+
+        if keep_label:
+            results.append((start_a, end_a, *metadata))
 
     return pd.DataFrame(results, columns=df_a.columns)

@@ -11,6 +11,7 @@ from tests.helpers import (
     union_basic,
     intersection_basic,
     complement_basic,
+    diff_basic,
 )
 
 cases = [
@@ -50,7 +51,12 @@ cases = [
         complement_b=[
             "    (---]   (----------]    (----]   (----]      (-]     ",
         ],
-        diff=[],  # TODO
+        a_diff_b=[
+            "     (--]      (----]         (--]   (----]              ",
+        ],
+        b_diff_a=[
+            " (--]     (-]          (----]                (---] (---] ",
+        ],
     ),
     dict(
         A=[
@@ -81,7 +87,6 @@ cases = [
         ],
         non_overlap_b=[
             "               (----]                                    ",
-            "                                                         ",
         ],
         combine=[
             " (--](------]  (----]  (----] (------------------] (---] ",
@@ -92,7 +97,12 @@ cases = [
         complement_b=[
             "                    (---------]                          ",
         ],
-        diff=[],  # TODO
+        a_diff_b=[
+            " (--](------]          (----]                      (---] ",
+        ],
+        b_diff_a=[
+            "               (----]         (------------------]       ",
+        ],
     ),
 ]
 
@@ -146,10 +156,16 @@ class TestBasicOps:
     def test_combine(self, test_case):
         df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
         df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
-        df_expected = intervals_from_str(test_case["combine"]).ivl().drop(columns=["tag"])
+        df_expected = (
+            intervals_from_str(test_case["combine"]).ivl().drop(columns=["tag"])
+        )
 
-        assert_df_interval_set_equality(df_expected, combine_basic(union_basic(df_a, df_b)))
-        assert_df_interval_set_equality(df_expected, combine_basic(union_basic(df_b, df_a)))
+        assert_df_interval_set_equality(
+            df_expected, combine_basic(union_basic(df_a, df_b))
+        )
+        assert_df_interval_set_equality(
+            df_expected, combine_basic(union_basic(df_b, df_a))
+        )
 
     def test_complement(self, test_case):
         df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
@@ -163,3 +179,16 @@ class TestBasicOps:
 
         assert_df_interval_set_equality(df_expected_a, complement_basic(df_a))
         assert_df_interval_set_equality(df_expected_b, complement_basic(df_b))
+
+    def test_diff(self, test_case):
+        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
+        df_expected_a_diff_b = (
+            intervals_from_str(test_case["a_diff_b"]).ivl().drop(columns=["tag"])
+        )
+        df_expected_b_diff_a = (
+            intervals_from_str(test_case["b_diff_a"]).ivl().drop(columns=["tag"])
+        )
+
+        assert_df_interval_set_equality(df_expected_a_diff_b, diff_basic(df_a, df_b))
+        assert_df_interval_set_equality(df_expected_b_diff_a, diff_basic(df_b, df_a))
