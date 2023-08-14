@@ -231,6 +231,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return self._apply_operation_to_groups(
             intervals_complement,
             [self.df],
+            aggregations=self.aggregations,
             left_bound=left_bound,
             right_bound=right_bound,
         )

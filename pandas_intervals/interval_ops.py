@@ -25,13 +25,15 @@ def intervals_intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFra
 
 # TODO Upgrade to vectorised version
 def intervals_complement(
-    dfs: List[pd.DataFrame],
+    df: pd.DataFrame,
+    aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
     left_bound: Optional[float] = None,
     right_bound: Optional[float] = None,
 ):
-    df = intervals_combine(dfs)
+    # df = intervals_combine(df, aggregations)
     return complement_basic(
         df,
+        aggregations,
         left_bound,
         right_bound,
     )
@@ -56,10 +58,9 @@ def intervals_non_overlap(
 
 
 def intervals_combine(
-    dfs: List[pd.DataFrame],
+    df: List[pd.DataFrame],
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
-    df = intervals_union(dfs)
     return combine_basic(df, aggregations)
 
 
