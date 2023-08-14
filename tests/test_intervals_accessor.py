@@ -77,33 +77,35 @@ class TestIntervalsAccessor:
 
     def test_empty_intervals_frame(self):
         """Test an empty `DataFrame` can be formatted with correct column types."""
-        result = pd.DataFrame.ivl.empty()
+        result = pd.DataFrame().ivl()
         assert len(result) == 0
         assert result.columns.tolist()[:2] == pd.DataFrame.ivl.required_cols
         assert all(
             result.dtypes[col] == dtype for col, dtype, _ in pd.DataFrame.ivl.fields
         )
 
-    def test_intervals_union(self):
-        """Test an interval union can be computed between two `DataFrame`s of intervals."""
+    def test_intervals_contains(self):  # TODO
         df_a = random_intervals(n_intervals=random.randint(0, 12))
-        df_b = random_intervals(n_intervals=random.randint(0, 12))
 
-        df_a_union_b = df_a.ivl.union(df_b)
-        df_b_union_a = df_b.ivl.union(df_a)
+        n_selected = random.randint(0, len(df_a) // 2)
+        has_other_interval = random.random() < 0.5
 
-        expected = union_basic(df_a, df_b)
+        random_mask = np.zeros(len(df_a), dtype=bool)
+        random_mask[:n_selected] = True
+        np.random.shuffle(random_mask)
+        df_b = df_a[random_mask]
 
-        assert_df_interval_set_equality(
-            df_a_union_b,
-            df_b_union_a,
-        )
-        assert_df_interval_set_equality(
-            df_a_union_b,
-            expected,
-        )
+        if has_other_interval:
+            df_b = pd.concat([df_b, random_intervals(n_intervals=1)], axis=0)
 
-    def test_intervals_overlap(self):
+        result = df_a.ivl.contains(df_b)
+
+        assert result is not has_other_interval
+
+    # def test_intervals_pad(self):  # TODO
+    # def test_intervals_unpad(self):  # TODO
+
+    def test_intervals_overlap_and_non_overlap(self):
         """Test an interval overlap can be computed on a `DataFrame` of intervals."""
         df_a = random_intervals(n_intervals=random.randint(0, 12))
 
@@ -127,6 +129,27 @@ class TestIntervalsAccessor:
             df_a,
         )
 
+    # def test_intervals_complement(self):  # TODO
+
+    def test_intervals_union(self):
+        """Test an interval union can be computed between two `DataFrame`s of intervals."""
+        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_b = random_intervals(n_intervals=random.randint(0, 12))
+
+        df_a_union_b = df_a.ivl.union(df_b)
+        df_b_union_a = df_b.ivl.union(df_a)
+
+        expected = union_basic(df_a, df_b)
+
+        assert_df_interval_set_equality(
+            df_a_union_b,
+            df_b_union_a,
+        )
+        assert_df_interval_set_equality(
+            df_a_union_b,
+            expected,
+        )
+
     def test_intervals_intersection(self):
         """Test an interval intersection can be computed between two `DataFrame`s of intervals."""
         df_a = random_intervals(n_intervals=random.randint(0, 12))
@@ -146,3 +169,6 @@ class TestIntervalsAccessor:
             df_a_intersection_b,
             expected,
         )
+
+    # def test_intervals_combine(self):  # TODO
+    # def test_intervals_diff(self):  # TODO
