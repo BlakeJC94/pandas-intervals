@@ -57,30 +57,28 @@ def intervals_non_overlap(
     return df.loc[~_get_overlapping_mask(df)]
 
 
+# TODO Upgrade to vectorised version
 def intervals_combine(
-    df: List[pd.DataFrame],
+    df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
     return combine_basic(df, aggregations)
 
 
 def intervals_difference(
-    df: pd.DataFrame,
-    dfs: List[pd.DataFrame],
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
     groupby_cols: Optional[List[str]] = None,
     min_len: Optional[float] = None,
 ):
-    if len(dfs) == 0:
-        return df
+    if len(df_a) == 0 or len(df_b) == 0:
+        return df_a
 
-    intervals_b = intervals_combine(dfs, groupby_cols)
-    if len(intervals_b) == 0:
-        return df
+    intervals_b = intervals_combine(df_b, groupby_cols)
+    intervals_a = intervals_combine(df_a, groupby_cols)
 
-    intervals_a = intervals_combine([df], groupby_cols)
-
-    input_columns = df.columns
-    intervals_a_metadata = df.drop(["start", "end"], axis=1)
+    input_columns = df_a.columns
+    intervals_a_metadata = df_a.drop(["start", "end"], axis=1)
 
     intervals_a = intervals_a[["start", "end"]].values.copy()
     intervals_b = intervals_b[["start", "end"]].values.copy()
