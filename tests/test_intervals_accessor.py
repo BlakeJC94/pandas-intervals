@@ -103,8 +103,30 @@ class TestIntervalsAccessor:
 
         assert result is not has_other_interval
 
-    # def test_intervals_pad(self):  # TODO
-    # def test_intervals_unpad(self):  # TODO
+    def test_intervals_pad(self):
+        df_a = random_intervals(n_intervals=random.randint(0, 12))
+
+        kwargs_0 = [
+            ('pad', df_a.ivl.durations.mean() * (random.random() - 0.5)),
+        ]
+        kwargs_1 = [
+            ('left_pad', df_a.ivl.durations.mean() * (random.random() - 0.5)),
+            ('right_pad', df_a.ivl.durations.mean() * (random.random() - 0.5)),
+        ]
+        kwargs = random.choice([kwargs_0, kwargs_1])
+        kwargs = dict(random.sample(kwargs, k=random.randint(1, len(kwargs))))
+
+        expected_pad = df_a.copy()
+        expected_pad['start'] -= kwargs.get('pad') or kwargs.get('left_pad') or 0
+        expected_pad['end'] += kwargs.get('pad') or kwargs.get('right_pad') or 0
+        expected_pad = expected_pad[expected_pad['end'] - expected_pad['start'] >= 0]
+
+        df_a_pad = df_a.ivl.pad(**kwargs)
+
+        assert_df_interval_set_equality(
+            df_a_pad,
+            expected_pad,
+        )
 
     def test_intervals_overlap_and_non_overlap(self):
         """Test an interval overlap can be computed on a `DataFrame` of intervals."""

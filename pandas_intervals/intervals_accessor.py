@@ -196,23 +196,8 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
                 raise ValueError("Either use `pad`, or `left_pad`/`right_pad`.")
             left_pad, right_pad = pad, pad
 
-        self.df["start"] = self.df["start"] - left_pad
-        self.df["end"] = self.df["end"] + right_pad
-        return self.df
-
-    def unpad(
-        self,
-        unpad: Optional[float] = None,
-        left_unpad: Optional[float] = None,
-        right_unpad: Optional[float] = None,
-    ):
-        if unpad is not None:
-            if left_unpad is not None or right_unpad is not None:
-                raise ValueError("Either use `unpad`, or `left_unpad`/`right_unpad`.")
-            left_unpad, right_unpad = unpad, unpad
-
-        self.df["start"] = self.df["start"] + left_unpad
-        self.df["end"] = self.df["end"] - right_unpad
+        self.df["start"] = self.df["start"] - (left_pad or 0)
+        self.df["end"] = self.df["end"] + (right_pad or 0)
         return self.df.loc[self.df["end"] - self.df["start"] >= 0]
 
     def overlap(self) -> pd.DataFrame:

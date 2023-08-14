@@ -66,11 +66,11 @@ combined = vf_a.ivl.combine(vf_b)
 
 padded = vf_a.ivl.pad(10)  # Optional kwargs: `left_pad`, `right_pad`
 
-unpadded = vf_a.ivl.unpad(10)  # Optional kwargs: `left_unpad`, `right_unpad`
-
 diff = vf_a.ivl.diff(vf_b)
 
 complement = vf_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
+
+vf_a_contains_vf_b = vf_a.ivl.contains(vf_b)
 ```
 
 We can also plot these intervals using a plotly backend (if available):
