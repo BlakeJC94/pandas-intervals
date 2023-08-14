@@ -163,6 +163,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         ends = self.df["end"]
         return ends - starts
 
+    @property
+    def span(self) -> float:
+        return self.df['end'].max() - self.df['start'].min()
+
     # TODO plot durations using plotly
     # TODO format and plot other dfs on rows
     def plot(self, *dfs):
