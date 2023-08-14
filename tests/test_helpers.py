@@ -16,17 +16,17 @@ from tests.helpers import (
 
 cases = [
     dict(
-        A=[
+        a=[
             "     (----]    (----]         (--------------]           ",
         ],
-        B=[
+        b=[
             " (--]   (---]          (----]    (---]    (------] (---] ",
         ],
-        union=[
+        a_union_b=[
             "     (----]    (----]         (--------------]           ",
             " (--]   (---]          (----]    (---]    (------] (---] ",
         ],
-        intersection=[
+        a_intersection_b=[
             "     (----]                   (--------------]           ",
             "        (---]                    (---]    (------]       ",
         ],
@@ -42,7 +42,13 @@ cases = [
         non_overlap_b=[
             " (--]   (---]          (----]    (---]    (------] (---] ",
         ],
-        combine=[
+        combine_a=[
+            "     (----]    (----]         (--------------]           ",
+        ],
+        combine_b=[
+            " (--]   (---]          (----]    (---]    (------] (---] ",
+        ],
+        combine_a_union_b=[
             " (--](------]  (----]  (----] (------------------] (---] ",
         ],
         complement_a=[
@@ -59,19 +65,19 @@ cases = [
         ],
     ),
     dict(
-        A=[
+        a=[
             "     (----]                                              ",
             " (--]   (---]          (----]                      (---] ",
         ],
-        B=[
+        b=[
             "               (----]         (--------------]           ",
             "                                 (---]    (------]       ",
         ],
-        union=[
+        a_union_b=[
             "     (----]    (----]         (--------------]",
             " (--]   (---]          (----]    (---]    (------] (---] ",
         ],
-        intersection=[
+        a_intersection_b=[
             "                                                         ",
         ],
         overlap_a=[
@@ -88,7 +94,13 @@ cases = [
         non_overlap_b=[
             "               (----]                                    ",
         ],
-        combine=[
+        combine_a=[
+            " (--](------]          (----]                      (---] ",
+        ],
+        combine_b=[
+            "               (----]         (------------------]       ",
+        ],
+        combine_a_union_b=[
             " (--](------]  (----]  (----] (------------------] (---] ",
         ],
         complement_a=[
@@ -110,26 +122,26 @@ cases = [
 @pytest.mark.parametrize("test_case", cases)
 class TestBasicOps:
     def test_union(self, test_case):
-        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
-        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
-        df_expected = intervals_from_str(test_case["union"]).ivl().drop(columns=["tag"])
+        df_a = intervals_from_str(test_case["a"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["b"]).ivl().drop(columns=["tag"])
+        df_expected = intervals_from_str(test_case["a_union_b"]).ivl().drop(columns=["tag"])
 
         assert_df_interval_set_equality(df_expected, union_basic(df_a, df_b))
         assert_df_interval_set_equality(df_expected, union_basic(df_b, df_a))
 
     def test_intersection(self, test_case):
-        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
-        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
+        df_a = intervals_from_str(test_case["a"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["b"]).ivl().drop(columns=["tag"])
         df_expected = (
-            intervals_from_str(test_case["intersection"]).ivl().drop(columns=["tag"])
+            intervals_from_str(test_case["a_intersection_b"]).ivl().drop(columns=["tag"])
         )
 
         assert_df_interval_set_equality(df_expected, intersection_basic(df_a, df_b))
         assert_df_interval_set_equality(df_expected, intersection_basic(df_b, df_a))
 
     def test_overlap(self, test_case):
-        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
-        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
+        df_a = intervals_from_str(test_case["a"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["b"]).ivl().drop(columns=["tag"])
         df_expected_a = (
             intervals_from_str(test_case["overlap_a"]).ivl().drop(columns=["tag"])
         )
@@ -141,8 +153,8 @@ class TestBasicOps:
         assert_df_interval_set_equality(df_expected_b, overlap_basic(df_b))
 
     def test_non_overlap(self, test_case):
-        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
-        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
+        df_a = intervals_from_str(test_case["a"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["b"]).ivl().drop(columns=["tag"])
         df_expected_a = (
             intervals_from_str(test_case["non_overlap_a"]).ivl().drop(columns=["tag"])
         )
@@ -154,22 +166,31 @@ class TestBasicOps:
         assert_df_interval_set_equality(df_expected_b, non_overlap_basic(df_b))
 
     def test_combine(self, test_case):
-        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
-        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
-        df_expected = (
-            intervals_from_str(test_case["combine"]).ivl().drop(columns=["tag"])
+        df_a = intervals_from_str(test_case["a"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["b"]).ivl().drop(columns=["tag"])
+        df_expected_combine_a = (
+            intervals_from_str(test_case["combine_a"]).ivl().drop(columns=["tag"])
+        )
+        df_expected_combine_b = (
+            intervals_from_str(test_case["combine_b"]).ivl().drop(columns=["tag"])
+        )
+        df_expected_combine_a_union_b = (
+            intervals_from_str(test_case["combine_a_union_b"]).ivl().drop(columns=["tag"])
         )
 
         assert_df_interval_set_equality(
-            df_expected, combine_basic(union_basic(df_a, df_b))
+            df_expected_combine_a, combine_basic(df_a)
         )
         assert_df_interval_set_equality(
-            df_expected, combine_basic(union_basic(df_b, df_a))
+            df_expected_combine_b, combine_basic(df_b)
+        )
+        assert_df_interval_set_equality(
+            df_expected_combine_a_union_b, combine_basic(union_basic(df_a, df_b))
         )
 
     def test_complement(self, test_case):
-        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
-        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
+        df_a = intervals_from_str(test_case["a"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["b"]).ivl().drop(columns=["tag"])
         df_expected_a = (
             intervals_from_str(test_case["complement_a"]).ivl().drop(columns=["tag"])
         )
@@ -181,8 +202,8 @@ class TestBasicOps:
         assert_df_interval_set_equality(df_expected_b, complement_basic(df_b))
 
     def test_diff(self, test_case):
-        df_a = intervals_from_str(test_case["A"]).ivl().drop(columns=["tag"])
-        df_b = intervals_from_str(test_case["B"]).ivl().drop(columns=["tag"])
+        df_a = intervals_from_str(test_case["a"]).ivl().drop(columns=["tag"])
+        df_b = intervals_from_str(test_case["b"]).ivl().drop(columns=["tag"])
         df_expected_a_diff_b = (
             intervals_from_str(test_case["a_diff_b"]).ivl().drop(columns=["tag"])
         )
