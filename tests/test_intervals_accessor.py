@@ -78,9 +78,9 @@ class TestIntervalsAccessor:
         with pytest.raises(ValueError):
             partial_intervlas_df.ivl()
 
-    def test_empty_intervals_frame(self):
+    def test_empty_intervals(self):
         """Test an empty `DataFrame` can be formatted with correct column types."""
-        result = pd.DataFrame().ivl()
+        result = random.choice([pd.DataFrame().ivl(), pd.DataFrame.ivl.empty()])
         assert len(result) == 0
         assert result.columns.tolist()[:2] == pd.DataFrame.ivl.required_cols
         assert all(

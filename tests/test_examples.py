@@ -9,48 +9,72 @@ import pytest
 import pandas_intervals.examples
 
 
-
-
-
-
 # Test data
 @pytest.fixture
 def regions_df():
     return pd.DataFrame(
         data=[
-            [0, 100, "study1", "train"],
-            [200, 350.0, "study2", "val"],
-            [1000, 2000.0, None, None],
+            [0.0, 100.0, 1, "train"],
+            [200.0, 350.0, 2, "val"],
+            [1000.0, 2000.0, 0, ""],
         ],
-        columns=["start", "end", "study_id", "category"],
+        columns=["start", "end", "tag", "note"],
     )
 
 
 @pytest.fixture
 def regions_json_data():
     return [
-        dict(start=500.0, end=600.0, tag="study1", note="train"),
-        dict(start=0.0, end=100.0, tag="study2", note="train"),
-        dict(start=200.0, end=350.0, tag="study2", note="test"),
-        dict(start=1000.0, end=2000.0, tag=None, note=None),
+        dict(start=500.0, end=600.0, tag=1, note="train"),
+        dict(start=0.0, end=100.0, tag=2, note="train"),
+        dict(start=200.0, end=350.0, tag=2, note="test"),
+        dict(start=1000.0, end=2000.0, tag=0, note=None),
     ]
+
 
 @pytest.fixture
 def regions_json_filepath(tmp_path, regions_json_data):
     filepath = Path(tmp_path) / "data.json"
-    with open(filepath, 'w') as f:
+    with open(filepath, "w") as f:
         json.dump(regions_json_data, f)
     yield filepath
     filepath.unlink()
 
+
 class TestRegionsAccessor:
     def test_constructor(self, regions_json_filepath, regions_json_data):
-        filepath = random.choice([Path(regions_json_filepath), str(regions_json_filepath)])
+        filepath = random.choice(
+            [Path(regions_json_filepath), str(regions_json_filepath)]
+        )
         expected = pd.DataFrame(regions_json_data).reg()
 
         result = pd.DataFrame.reg.from_json(filepath)
 
         pd.testing.assert_frame_equal(result, expected)
+
+    def test_raise_format_missing_added_required_column(self, regions_df):
+        drop_col = 'tag'  # Not in pd.DataFrame.reg.default_values.keys
+        partial_intervals_df = regions_df.drop(drop_col, axis=1)
+        with pytest.raises(ValueError):
+            partial_intervals_df.reg()
+
+    def test_default_value_parsed(self, regions_df):
+        drop_col = 'note'  # In pd.DataFrame.reg.default_values.keys
+        regions_df = regions_df.drop(drop_col, axis=1)
+
+        regions_df = regions_df.reg()
+
+        assert (regions_df['note'] == pd.DataFrame.reg.default_values['note']).all()
+
+    def test_empty(self):
+        result = random.choice([pd.DataFrame().reg(), pd.DataFrame.reg.empty()])
+        assert len(result) == 0
+        assert result.columns.tolist()[:3] == pd.DataFrame.reg.required_cols
+        assert all(
+            result.dtypes[col] == dtype for col, dtype, _ in pd.DataFrame.reg.fields
+        )
+
+
 
 # class TestRegionsFrame:
 #     """Tests for the `RegionsFrame` class."""
@@ -170,5 +194,5 @@ class TestRegionsAccessor:
 #         out = +labels
 #         out = out - gap_size
 #         labels = labels - gap_size
-#         expected_frame = LabelsFrame(expected).format()
+#         expected_frame = Labels Frame(expected).format()
 #         assert out.equals(expected_frame)
