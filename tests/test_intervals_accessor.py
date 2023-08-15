@@ -78,7 +78,7 @@ class TestIntervalsAccessor:
         with pytest.raises(ValueError):
             partial_intervlas_df.ivl()
 
-    def test_empty_intervals(self):
+    def test_empty(self):
         """Test an empty `DataFrame` can be formatted with correct column types."""
         result = random.choice([pd.DataFrame().ivl(), pd.DataFrame.ivl.empty()])
         assert len(result) == 0
@@ -88,7 +88,7 @@ class TestIntervalsAccessor:
         )
 
     def test_intervals_contains(self):
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         n_selected = random.randint(0, len(df_a) // 2)
         has_other_interval = random.random() < 0.5
@@ -99,14 +99,14 @@ class TestIntervalsAccessor:
         df_b = df_a[random_mask]
 
         if has_other_interval:
-            df_b = pd.concat([df_b, random_intervals(n_intervals=1)], axis=0)
+            df_b = pd.concat([df_b, random_intervals(n_intervals=1).ivl()], axis=0)
 
         result = df_a.ivl.contains(df_b)
 
         assert result is not has_other_interval
 
     def test_intervals_pad(self):
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         kwargs_0 = [
             ("pad", df_a.ivl.durations.mean() * (random.random() - 0.5)),
@@ -132,7 +132,7 @@ class TestIntervalsAccessor:
 
     def test_intervals_overlap_and_non_overlap(self):
         """Test an interval overlap can be computed on a `DataFrame` of intervals."""
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         df_a_overlap = df_a.ivl.overlap()
         df_a_non_overlap = df_a.ivl.non_overlap()
@@ -155,7 +155,7 @@ class TestIntervalsAccessor:
         )
 
     def test_intervals_complement(self):
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         kwargs = [
             ("left_bound", df_a["start"].min() * (0.5 + random.random())),
@@ -178,8 +178,8 @@ class TestIntervalsAccessor:
 
     def test_intervals_union(self):
         """Test an interval union can be computed between two `DataFrame`s of intervals."""
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
-        df_b = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
+        df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         df_a_union_b = df_a.ivl.union(df_b)
         df_b_union_a = df_b.ivl.union(df_a)
@@ -197,8 +197,8 @@ class TestIntervalsAccessor:
 
     def test_intervals_intersection(self):
         """Test an interval intersection can be computed between two `DataFrame`s of intervals."""
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
-        df_b = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
+        df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         df_a_intersection_b = df_a.ivl.intersection(df_b)
         df_b_intersection_a = df_b.ivl.intersection(df_a)
@@ -216,8 +216,8 @@ class TestIntervalsAccessor:
         )
 
     def test_intervals_combine(self):
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
-        df_b = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
+        df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         df_combine_a = df_a.ivl.combine()
         df_combine_b = df_b.ivl.combine()
@@ -241,8 +241,8 @@ class TestIntervalsAccessor:
         )
 
     def test_intervals_diff(self):
-        df_a = random_intervals(n_intervals=random.randint(0, 12))
-        df_b = random_intervals(n_intervals=random.randint(0, 12))
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
+        df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         df_a_diff_b = df_a.ivl.diff(df_b)
         df_b_diff_a = df_b.ivl.diff(df_a)

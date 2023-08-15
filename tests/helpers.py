@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import random
 from typing import Union, List, Mapping, Optional, Set, Any, Tuple, Dict, Callable
 from itertools import product
 
@@ -114,9 +116,12 @@ def random_intervals(
     n_intervals: int,
     duration_bounds: Optional[Tuple[float, float]] = None,
     gap_bounds: Optional[Tuple[float, float]] = None,
+    random_fields: Optional[List[Tuple[str, List[Any]]]] = None,
 ):
     if n_intervals == 0:
-        return pd.DataFrame.ivl.empty()
+        return pd.DataFrame()
+
+    random_fields = random_fields or []
 
     if duration_bounds is None:
         duration_bounds = (10, 60)
@@ -138,7 +143,13 @@ def random_intervals(
     )
     starts = np.round(offset, 2) + np.insert(np.cumsum(gaps + durations)[:-1], 0, 0)
     ends = starts + durations
-    return pd.DataFrame(np.stack([starts, ends], axis=1)).ivl()
+
+    data = []
+    for start, end in zip(starts, ends):
+        md = [random.choice(v) for _, v in random_fields]
+        data.append((start, end, *md))
+
+    return pd.DataFrame(data, columns=['start', 'end', *[k for k, _ in random_fields]])
 
 
 def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
