@@ -2,6 +2,7 @@ from typing import Callable, Iterable, Union, List, Dict, Tuple, Any, Optional
 
 import numpy as np
 import pandas as pd
+
 try:
     import plotly
 except ImportError:
@@ -85,11 +86,17 @@ class FormatTrait:
 
     @classmethod
     def _validate(cls, obj):
+        if any(c not in cls.additional_cols for c in cls.default_values):
+            raise ValueError(
+                f"{cls.__name__} contains keys in `default_values` not located in `additional_cols`."
+            )
+
         missing_cols = [col for col in cls.required_cols if col not in obj]
         if len(missing_cols) > 0:
             raise ValueError(
                 f"DataFrame missing required column(s) '{', '.join(missing_cols)}'."
             )
+
         if (obj["end"] - obj["start"] < 0).any():
             raise ValueError("DataFrame contains invalid intervals.")
 
