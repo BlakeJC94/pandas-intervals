@@ -72,8 +72,8 @@ class FieldsTrait:
 
 class FormatTrait:
     @classmethod
-    def format(cls, pandas_obj: pd.DataFrame) -> pd.DataFrame:
-        if pandas_obj.columns.empty:
+    def format(cls, pandas_obj: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+        if pandas_obj is None or pandas_obj.columns.empty:
             return cls.empty()
         pandas_obj = pandas_obj.rename(
             columns={i: col for i, col in enumerate(cls.cols)}
@@ -163,7 +163,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     """
 
-    def __init__(self, pandas_obj: pd.DataFrame):
+    def __init__(self, pandas_obj: Optional[pd.DataFrame] = None):
         self.df = self.format(pandas_obj)
 
     def __call__(self):
