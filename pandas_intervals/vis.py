@@ -10,6 +10,7 @@ except ImportError:
     go = None
     make_subplots = None
 
+Figure = go.Figure if go is not None else None
 
 def plot_intervals(
     intervals_group: Union[Dict[str, NDArray], List[NDArray], NDArray],
@@ -17,7 +18,7 @@ def plot_intervals(
     colors: Union[List[str], str] = "red",
     x_buffer: float = 200,
     y_buffer: float = 0.05,
-) -> go.Figure:
+) -> Figure:
     if not isinstance(intervals_group, list):
         intervals_group = [intervals_group]
 

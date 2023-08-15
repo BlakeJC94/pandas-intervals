@@ -16,6 +16,7 @@ from .interval_ops import (
     intervals_combine,
     intervals_difference,
 )
+from .vis import plot_intervals
 
 
 # Every time df.intervals is called, `init` is called!
@@ -171,13 +172,11 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def span(self) -> float:
         return self.df["end"].max() - self.df["start"].min()
 
-    # TODO plot durations using plotly
-    # TODO format and plot other dfs on rows
     def plot(self, *dfs):
         if plotly is None:
             raise ImportError("Plot requires `plotly` to be installed")
-        # TODO raise if plotly not installed
-        pass
+        dfs = [self.df, *[self.format(df) for df in dfs]]
+        return plot_intervals(dfs)
 
     def sort(self) -> pd.DataFrame:
         results = sort_intervals(
