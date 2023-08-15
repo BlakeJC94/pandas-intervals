@@ -1,3 +1,5 @@
+import inspect
+from functools import partial
 from typing import Callable, Iterable, Union, List, Dict, Tuple, Any, Optional
 
 import numpy as np
@@ -68,6 +70,15 @@ class FieldsTrait:
     def empty(cls) -> pd.DataFrame:
         dtype = [(name, kind) for name, kind, _ in cls.fields]
         return pd.DataFrame(np.empty(0, dtype=np.dtype(dtype)))
+
+    @classmethod
+    @property
+    def apply_to_groups(cls) -> Callable:
+        return partial(
+            _apply_operation_to_groups,
+            groupby_cols=cls.groupby_cols,
+            aggregations=cls.aggregations,
+        )
 
 
 class FormatTrait:
@@ -213,17 +224,15 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return self.df.loc[self.df["end"] - self.df["start"] >= 0]
 
     def overlap(self) -> pd.DataFrame:
-        return _apply_operation_to_groups(
+        return self.apply_to_groups(
             intervals_overlap,
             [self.df],
-            groupby_cols=self.groupby_cols,
         )
 
     def non_overlap(self) -> pd.DataFrame:
-        return _apply_operation_to_groups(
+        return self.apply_to_groups(
             intervals_non_overlap,
             [self.df],
-            groupby_cols=self.groupby_cols,
         )
 
     def complement(
@@ -231,11 +240,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         left_bound: Optional[float] = None,
         right_bound: Optional[float] = None,
     ):
-        return _apply_operation_to_groups(
+        return self.apply_to_groups(
             intervals_complement,
             [self.df],
-            groupby_cols=self.groupby_cols,
-            aggregations=self.aggregations,
             left_bound=left_bound,
             right_bound=right_bound,
         )
@@ -245,25 +252,21 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return intervals_union(interval_sets)
 
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
-        return _apply_operation_to_groups(
+        return self.apply_to_groups(
             intervals_intersection,
             [self.df, self.format(df)],
-            groupby_cols=self.groupby_cols,
         )
 
     def combine(self, *dfs) -> pd.DataFrame:
-        return _apply_operation_to_groups(
+        return self.apply_to_groups(
             intervals_combine,
             [self.union(*dfs)],
-            groupby_cols=self.groupby_cols,
-            aggregations=self.aggregations,
         )
 
     def diff(self, df: pd.DataFrame):
-        return _apply_operation_to_groups(
+        return self.apply_to_groups(
             intervals_difference,
             [self.df, self.format(df)],
-            groupby_cols=self.groupby_cols,
         )
 
 
@@ -271,11 +274,19 @@ def _apply_operation_to_groups(
     operation: Callable,
     dfs: List[pd.DataFrame],
     groupby_cols: List[str],
+    aggregations=None,
     **kwargs,
 ) -> pd.DataFrame:
     results = []
     for _, df_groups in _df_groups(dfs, groupby_cols=groupby_cols):
-        results.append(operation(*df_groups, **kwargs))
+        if (
+            aggregations is not None
+            and "aggregations" in inspect.getfullargspec(operation).args
+        ):
+            result = operation(*df_groups, aggregations=aggregations, **kwargs)
+        else:
+            result = operation(*df_groups, **kwargs)
+        results.append(result)
     return pd.concat(results, axis=0)
 
 
