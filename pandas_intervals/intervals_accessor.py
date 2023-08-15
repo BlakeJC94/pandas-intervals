@@ -165,7 +165,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     @property
     def span(self) -> float:
-        return self.df['end'].max() - self.df['start'].min()
+        return self.df["end"].max() - self.df["start"].min()
 
     # TODO plot durations using plotly
     # TODO format and plot other dfs on rows
@@ -235,10 +235,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             [self.df, self.format(df)],
         )
 
-    def combine(self, df: pd.DataFrame) -> pd.DataFrame:
+    def combine(self, *dfs) -> pd.DataFrame:
         return self._apply_operation_to_groups(
             intervals_combine,
-            [self.union(self.df, df)],
+            [self.union(*dfs)],
             aggregations=self.aggregations,
         )
 

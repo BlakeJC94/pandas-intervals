@@ -14,6 +14,8 @@ from tests.helpers import (
     non_overlap_basic,
     union_basic,
     intersection_basic,
+    combine_basic,
+    diff_basic,
 )
 
 
@@ -85,7 +87,7 @@ class TestIntervalsAccessor:
             result.dtypes[col] == dtype for col, dtype, _ in pd.DataFrame.ivl.fields
         )
 
-    def test_intervals_contains(self):  # TODO
+    def test_intervals_contains(self):
         df_a = random_intervals(n_intervals=random.randint(0, 12))
 
         n_selected = random.randint(0, len(df_a) // 2)
@@ -107,19 +109,19 @@ class TestIntervalsAccessor:
         df_a = random_intervals(n_intervals=random.randint(0, 12))
 
         kwargs_0 = [
-            ('pad', df_a.ivl.durations.mean() * (random.random() - 0.5)),
+            ("pad", df_a.ivl.durations.mean() * (random.random() - 0.5)),
         ]
         kwargs_1 = [
-            ('left_pad', df_a.ivl.durations.mean() * (random.random() - 0.5)),
-            ('right_pad', df_a.ivl.durations.mean() * (random.random() - 0.5)),
+            ("left_pad", df_a.ivl.durations.mean() * (random.random() - 0.5)),
+            ("right_pad", df_a.ivl.durations.mean() * (random.random() - 0.5)),
         ]
         kwargs = random.choice([kwargs_0, kwargs_1])
         kwargs = dict(random.sample(kwargs, k=random.randint(1, len(kwargs))))
 
         expected_pad = df_a.copy()
-        expected_pad['start'] -= kwargs.get('pad') or kwargs.get('left_pad') or 0
-        expected_pad['end'] += kwargs.get('pad') or kwargs.get('right_pad') or 0
-        expected_pad = expected_pad[expected_pad['end'] - expected_pad['start'] >= 0]
+        expected_pad["start"] -= kwargs.get("pad") or kwargs.get("left_pad") or 0
+        expected_pad["end"] += kwargs.get("pad") or kwargs.get("right_pad") or 0
+        expected_pad = expected_pad[expected_pad["end"] - expected_pad["start"] >= 0]
 
         df_a_pad = df_a.ivl.pad(**kwargs)
 
@@ -156,8 +158,8 @@ class TestIntervalsAccessor:
         df_a = random_intervals(n_intervals=random.randint(0, 12))
 
         kwargs = [
-            ('left_bound', df_a['start'].min() * (0.5 + random.random())),
-            ('right_bound', df_a['end'].max() * (0.5 + random.random())),
+            ("left_bound", df_a["start"].min() * (0.5 + random.random())),
+            ("right_bound", df_a["end"].max() * (0.5 + random.random())),
         ]
         kwargs = dict(random.sample(kwargs, k=random.randint(0, len(kwargs))))
 
@@ -213,5 +215,29 @@ class TestIntervalsAccessor:
             expected,
         )
 
-    # def test_intervals_combine(self):  # TODO
+    def test_intervals_combine(self):  # TODO
+        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_b = random_intervals(n_intervals=random.randint(0, 12))
+
+        df_combine_a = df_a.ivl.combine()
+        df_combine_b = df_b.ivl.combine()
+        df_combine_a_union_b = df_a.ivl.union(df_b).ivl.combine()
+
+        expected_combine_a = combine_basic(df_a)
+        expected_combine_b = combine_basic(df_b)
+        expected_combine_a_union_b = combine_basic(union_basic(df_a, df_b))
+
+        assert_df_interval_set_equality(
+            df_combine_a,
+            expected_combine_a,
+        )
+        assert_df_interval_set_equality(
+            df_combine_b,
+            expected_combine_b,
+        )
+        assert_df_interval_set_equality(
+            df_combine_a_union_b,
+            expected_combine_a_union_b,
+        )
+
     # def test_intervals_diff(self):  # TODO
