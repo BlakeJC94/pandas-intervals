@@ -1,4 +1,6 @@
 import random
+import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -11,43 +13,44 @@ import pandas_intervals.examples
 
 
 
-# # Test data
-# @pytest.fixture
-# def regions_df():
-#     return pd.DataFrame(
-#         data=[
-#             [0, 100, "study1", "train"],
-#             [200, 350.0, "study2", "val"],
-#             [1000, 2000.0, None, None],
-#         ],
-#         columns=["start", "end", "study_id", "category"],
-#     )
+# Test data
+@pytest.fixture
+def regions_df():
+    return pd.DataFrame(
+        data=[
+            [0, 100, "study1", "train"],
+            [200, 350.0, "study2", "val"],
+            [1000, 2000.0, None, None],
+        ],
+        columns=["start", "end", "study_id", "category"],
+    )
 
 
-# @pytest.fixture
-# def regions_frame():
-#     return RegionsFrame(
-#         data=[
-#             [0.0, 100.0, "study1", "train"],
-#             [200.0, 350.0, "study2", "val"],
-#             [1000.0, 2000.0, "", ""],
-#         ],
-#         columns=["start", "end", "study_id", "category"],
-#     )
+@pytest.fixture
+def regions_json_data():
+    return [
+        dict(start=500.0, end=600.0, tag="study1", note="train"),
+        dict(start=0.0, end=100.0, tag="study2", note="train"),
+        dict(start=200.0, end=350.0, tag="study2", note="test"),
+        dict(start=1000.0, end=2000.0, tag=None, note=None),
+    ]
 
+@pytest.fixture
+def regions_json_filepath(tmp_path, regions_json_data):
+    filepath = Path(tmp_path) / "data.json"
+    with open(filepath, 'w') as f:
+        json.dump(regions_json_data, f)
+    yield filepath
+    filepath.unlink()
 
-# @pytest.fixture
-# def another_regions_frame():
-#     return RegionsFrame(
-#         data=[
-#             [500.0, 600.0, "study1", "train"],
-#             [0.0, 100.0, "study2", "train"],
-#             [200.0, 350.0, "study2", "test"],
-#             [1000.0, 2000.0, "", ""],
-#         ],
-#         columns=["start", "end", "study_id", "category"],
-#     )
+class TestRegionsAccessor:
+    def test_constructor(self, regions_json_filepath, regions_json_data):
+        filepath = random.choice([Path(regions_json_filepath), str(regions_json_filepath)])
+        expected = pd.DataFrame(regions_json_data).reg()
 
+        result = pd.DataFrame.reg.from_json(filepath)
+
+        pd.testing.assert_frame_equal(result, expected)
 
 # class TestRegionsFrame:
 #     """Tests for the `RegionsFrame` class."""

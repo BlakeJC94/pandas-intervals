@@ -215,7 +215,7 @@ class TestIntervalsAccessor:
             expected,
         )
 
-    def test_intervals_combine(self):  # TODO
+    def test_intervals_combine(self):
         df_a = random_intervals(n_intervals=random.randint(0, 12))
         df_b = random_intervals(n_intervals=random.randint(0, 12))
 
