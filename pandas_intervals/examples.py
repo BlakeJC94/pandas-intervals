@@ -12,7 +12,7 @@ import pandas as pd
 class RegionsAccessor(IntervalsAccessor):
     # Additional required columns can be specified in a list of tuple
     # where each tuple is `(column_name, dtype, aggregation)`
-    additional_cols = [
+    additional_fields = [
         ("tag", "int64", "groupby"),
         ("note", "object", lambda x: ",".join(x)),
     ]
