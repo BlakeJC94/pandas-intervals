@@ -248,6 +248,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             [self.df, self.format(df)],
         )
 
+    # TODO Move out of class
     def _apply_operation_to_groups(
         self,
         operation: Callable,

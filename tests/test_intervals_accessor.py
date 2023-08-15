@@ -240,4 +240,21 @@ class TestIntervalsAccessor:
             expected_combine_a_union_b,
         )
 
-    # def test_intervals_diff(self):  # TODO
+    def test_intervals_diff(self):
+        df_a = random_intervals(n_intervals=random.randint(0, 12))
+        df_b = random_intervals(n_intervals=random.randint(0, 12))
+
+        df_a_diff_b = df_a.ivl.diff(df_b)
+        df_b_diff_a = df_b.ivl.diff(df_a)
+
+        expected_a_diff_b = diff_basic(df_a, df_b)
+        expected_b_diff_a = diff_basic(df_b, df_a)
+
+        assert_df_interval_set_equality(
+            df_a_diff_b,
+            expected_a_diff_b,
+        )
+        assert_df_interval_set_equality(
+            df_b_diff_a,
+            expected_b_diff_a,
+        )
