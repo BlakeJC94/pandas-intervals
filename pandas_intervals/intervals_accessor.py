@@ -2,6 +2,10 @@ from typing import Callable, Iterable, Union, List, Dict, Tuple, Any, Optional
 
 import numpy as np
 import pandas as pd
+try:
+    import plotly
+except ImportError:
+    plotly = None
 
 from .interval_ops import (
     intervals_union,
@@ -170,6 +174,8 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     # TODO plot durations using plotly
     # TODO format and plot other dfs on rows
     def plot(self, *dfs):
+        if plotly is None:
+            raise ImportError("Plot requires `plotly` to be installed")
         # TODO raise if plotly not installed
         pass
 
