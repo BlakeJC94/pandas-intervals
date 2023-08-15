@@ -104,51 +104,6 @@ class TestRegionsAccessor:
         assert result is not has_other_interval
 
 
-# class TestRegionsFrame:
-#     """Tests for the `RegionsFrame` class."""
-
-#     def test_format_regions(self, regions_df, regions_frame):
-#         """Test a `RegionsFrame` can be created from a `DataFrame` of regions."""
-#         regions = RegionsFrame(regions_df).format()
-#         pd.testing.assert_frame_equal(regions, regions_frame)
-
-#     def test_regions_format_missing_required_column(self, regions_df, regions_frame):
-#         """Test an exception is raised trying to create a `RegionsFrame` with a column missing."""
-#         # Drop one or more required columns from input DataFrame
-#         num_cols_to_drop = random.choice(range(1, len(regions_frame.required_cols)))
-#         drop_cols = np.random.choice(
-#             regions_frame.required_cols, num_cols_to_drop, replace=False
-#         )
-#         partial_regions_df = regions_df[
-#             [col for col in regions_df.columns if col not in drop_cols]
-#         ]
-
-#         with pytest.raises(ValueError):
-#             LabelsFrame(partial_regions_df).format()
-
-#     def test_union_regions_frame(self, regions_frame, another_regions_frame):
-#         """Test a `RegionsFrame` can be unioned with another `RegionsFrame`."""
-#         result_a = regions_frame | another_regions_frame
-#         result_b = another_regions_frame | regions_frame
-#         pd.testing.assert_frame_equal(
-#             result_a.reset_index(drop=True),
-#             result_b.reset_index(drop=True),
-#         )
-#         assert (
-#             len(result_a) == len(regions_frame) + len(another_regions_frame) - 1
-#         ), "Result contains duplicate."
-
-#     def test_intersection_regions_frame(self, regions_frame, another_regions_frame):
-#         """Test a `RegionsFrame` can be intersectioned with another `RegionsFrame`."""
-#         result_a = regions_frame & another_regions_frame
-#         result_b = another_regions_frame & regions_frame
-#         pd.testing.assert_frame_equal(
-#             result_a.reset_index(drop=True),
-#             result_b.reset_index(drop=True),
-#         )
-#         assert len(result_a) == 1
-
-
 # # TODO REFACTOR
 # class TestCombineCloseLabels:
 #     @pytest.mark.parametrize(
