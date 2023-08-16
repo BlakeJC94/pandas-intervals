@@ -192,7 +192,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def plot(self, *dfs):
         if plotly is None:
-            raise ImportError("Plot requires `plotly` to be installed")
+            raise ImportError("Plotting intervals requires `plotly` to be installed")
         dfs = [self.df, *[self.format(df) for df in dfs]]
         return plot_intervals(dfs)
 

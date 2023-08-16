@@ -84,9 +84,7 @@ class TestRegionsAccessor:
         )
 
     def test_intervals_contains(self):
-        df_a = random_regions(
-            n_intervals=random.randint(0, 12),
-        )
+        df_a = random_regions(n_intervals=random.randint(0, 12))
 
         n_selected = random.randint(0, len(df_a) // 2)
         has_other_interval = random.random() < 0.5
