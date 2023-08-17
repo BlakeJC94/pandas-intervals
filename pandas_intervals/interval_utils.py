@@ -52,7 +52,6 @@ def _points_from_intervals(interval_groups: List[np.ndarray]) -> Tuple[np.ndarra
 
 def _atomize_intervals(
     interval_groups: List[np.ndarray],
-    min_len: Optional[float] = None,
     drop_gaps: bool = True,
 ) -> Tuple[np.ndarray, np.ndarray]:
     points, indices = _points_from_intervals(interval_groups)
@@ -68,12 +67,5 @@ def _atomize_intervals(
 
         atomized_intervals = atomized_intervals[mask_nongap_intervals]
         interval_idxs = interval_idxs[mask_nongap_intervals]
-
-    if min_len is not None:
-        interval_lengths = atomized_intervals[:, 1] - atomized_intervals[:, 0]
-        mask_above_min_len = interval_lengths > min_len
-
-        atomized_intervals = atomized_intervals[mask_above_min_len]
-        interval_idxs = interval_idxs[mask_above_min_len]
 
     return atomized_intervals, interval_idxs

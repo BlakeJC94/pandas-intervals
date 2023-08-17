@@ -86,7 +86,6 @@ def intervals_difference(
     atoms, indices = _atomize_intervals(
         [intervals_a, intervals_b],
         drop_gaps=False,
-        min_len=min_len,
     )
     mask_a_atoms = (indices[:, 0] != -1) & (indices[:, 1] == -1)
     result, indices = atoms[mask_a_atoms], indices[mask_a_atoms, 0]
