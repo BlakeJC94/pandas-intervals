@@ -68,20 +68,19 @@ def intervals_combine(
 def intervals_difference(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
-    groupby_cols: Optional[List[str]] = None,
-    min_len: Optional[float] = None,
+    aggregations: Optional[List[str]] = None,
 ):
     if len(df_a) == 0 or len(df_b) == 0:
         return df_a
 
-    intervals_b = intervals_combine(df_b, groupby_cols)
-    intervals_a = intervals_combine(df_a, groupby_cols)
+    df_b = intervals_combine(df_b, aggregations)
+    df_a = intervals_combine(df_a, aggregations)
 
     input_columns = df_a.columns
     intervals_a_metadata = df_a.drop(["start", "end"], axis=1)
 
-    intervals_a = intervals_a[["start", "end"]].values.copy()
-    intervals_b = intervals_b[["start", "end"]].values.copy()
+    intervals_a = df_a[["start", "end"]].to_numpy()
+    intervals_b = df_b[["start", "end"]].to_numpy()
 
     atoms, indices = _atomize_intervals(
         [intervals_a, intervals_b],
