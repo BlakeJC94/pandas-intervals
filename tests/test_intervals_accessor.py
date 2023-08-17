@@ -48,6 +48,7 @@ def intervals_df_b():
     )
 
 
+# TODO break up this test class into smaller units for each operation
 class TestIntervalsAccessor:
     def test_format_intervals(self, intervals_df_a):
         """Test a `DataFrame` can be formatted by the IntervalsAccessor."""
@@ -172,7 +173,7 @@ class TestIntervalsAccessor:
         )
 
         assert_df_interval_set_equality(
-            df_a_complement.ivl.intersection(df_a),
+            intersection_basic(df_a_complement, df_a),
             pd.DataFrame().ivl(),
         )
 
