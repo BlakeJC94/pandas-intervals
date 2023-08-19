@@ -1,6 +1,5 @@
-import inspect
 from functools import partial
-from typing import Callable, Iterable, Union, List, Dict, Tuple, Any, Optional
+from typing import Callable, Union, List, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -20,10 +19,8 @@ from .interval_ops import (
     intervals_difference,
 )
 from .vis import plot_intervals
+from .utils import _apply_operation_to_groups, sort_intervals
 
-
-# Every time df.intervals is called, `init` is called!
-# Potentialy this is really good for ensuring that the types are always valid
 
 # When I use the accessor,
 # * Check dataframe has required columns
@@ -286,55 +283,3 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             intervals_difference,
             [self.df, self.format(df)],
         )
-
-
-def _apply_operation_to_groups(
-    operation: Callable,
-    dfs: List[pd.DataFrame],
-    groupby_cols: List[str],
-    aggregations=None,
-    **kwargs,
-) -> pd.DataFrame:
-    results = []
-    for _, df_groups in _df_groups(dfs, groupby_cols=groupby_cols):
-        if (
-            aggregations is not None
-            and "aggregations" in inspect.getfullargspec(operation).args
-        ):
-            result = operation(*df_groups, aggregations=aggregations, **kwargs)
-        else:
-            result = operation(*df_groups, **kwargs)
-        results.append(result)
-    return pd.concat(results, axis=0)
-
-
-def sort_intervals(
-    df: pd.DataFrame,
-    sort_cols: Optional[List[str]] = None,
-) -> pd.DataFrame:
-    sort_cols = sort_cols if sort_cols is not None else []
-    result = df.sort_values(["start", "end", *sort_cols])
-    return result
-
-
-def _df_groups(
-    dfs: List[pd.DataFrame],
-    groupby_cols: Optional[List[str]] = None,
-) -> Iterable[Tuple[Any, List[pd.DataFrame]]]:
-    groupby_cols = groupby_cols or []
-    if len(groupby_cols) == 0:
-        yield (None, dfs)
-    else:
-        n_dfs = len(dfs)
-        for i in range(n_dfs):
-            dfs[i]["_arg"] = i
-
-        df = pd.concat(dfs)
-        if len(groupby_cols) == 1:
-            groupby_cols = groupby_cols[0]
-        for group, df_group in df.groupby(groupby_cols):
-            result = [
-                df_group[(df_group["_arg"] == i)].drop(columns=["_arg"])
-                for i in range(n_dfs)
-            ]
-            yield (group, result)
