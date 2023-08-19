@@ -322,6 +322,8 @@ def _df_groups(
             dfs[i]["_arg"] = i
 
         df = pd.concat(dfs)
+        if len(groupby_cols) == 1:
+            groupby_cols = groupby_cols[0]
         for group, df_group in df.groupby(groupby_cols):
             result = [
                 df_group[(df_group["_arg"] == i)].drop(columns=["_arg"])
