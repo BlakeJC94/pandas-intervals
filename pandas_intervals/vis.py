@@ -13,10 +13,15 @@ Figure = go.Figure if go is not None else None
 def plot_intervals(
     dfs: List[pd.DataFrame],
     colors: Optional[List[str]] = None,
+    names: Optional[List[str]] = None,
     **layout_kwargs,
 ) -> Figure:
     if not colors:
         colors = ["red", "green", "blue"]
+
+    if not names:
+        names = [str(i) for i in range(len(dfs))]
+    assert len(names) == len(dfs), "Expected number of names to match number of DataFrames."
 
     hspan = 1.0
 
@@ -31,6 +36,7 @@ def plot_intervals(
                     offset=offset,
                     span=hspan,
                     color=colors[i % len(colors)],
+                    name=names[i],
                 )
             )
         tickvals.append(offset)
@@ -56,11 +62,15 @@ def plot_intervals(
         spikecolor="black",
         spikesnap="cursor",
         spikemode="across",
+        zeroline=False,
+        showgrid=True,
     )
     fig.update_yaxes(
         range=y_range,
         tickvals=tickvals,
         ticktext=ticktext,
+        zeroline=False,
+        showgrid=False,
     )
 
     fig.show()
@@ -72,6 +82,7 @@ def create_trace_from_interval(
     offset: float = 0.0,
     span: float = 1.0,
     color: str = "red",
+    name: str = "",
 ) -> Dict[str, Any]:
     start, end, *metadata = interval
     lower, upper = offset - 0.4 * span, offset + 0.4 * span
@@ -79,7 +90,7 @@ def create_trace_from_interval(
         x=[start, start, end, end, start],
         y=[lower, upper, upper, lower, lower],
         mode="lines",
-        name="",
+        name=name,
         showlegend=False,
         marker=dict(color=color),
         fill="toself",

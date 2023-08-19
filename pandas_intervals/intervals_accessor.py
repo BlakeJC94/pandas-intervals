@@ -202,9 +202,16 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         groupby_cols = groupby_cols or self.groupby_cols
 
         dfs = []
-        for _, df in _df_groups([self.df], groupby_cols=groupby_cols):
+        names = []
+        for group, df in _df_groups([self.df], groupby_cols=groupby_cols):
+            names.append(str(group))
             dfs.extend(df)
-        return plot_intervals(dfs, colors, **layout_kwargs)
+
+        title = None
+        if len(groupby_cols) > 0:
+            title = "Grouped by " + ", ".join([repr(c) for c in groupby_cols])
+
+        return plot_intervals(dfs, colors, names, title=title, **layout_kwargs)
 
     def sort(self) -> pd.DataFrame:
         results = sort_intervals(
