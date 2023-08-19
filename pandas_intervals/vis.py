@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -16,43 +16,39 @@ def plot_intervals(
     df: pd.DataFrame,
     groupby_cols: Optional[List[str]] = None,
     colors: Optional[List[str]] = None,
+    title: Optional[str] = None,
     **layout_kwargs,
 ) -> go.Figure:
     dfs = []
-    names = []
     for group, df in _df_groups([df], groupby_cols=groupby_cols):
         group_name = group if group is not None else ""
-        names.append(str(group_name))
-        dfs.extend(df)
+        dfs.append((str(group_name), df[0]))
 
-    title = None
-    if groupby_cols is not None and len(groupby_cols) > 0:
+    if title is None and groupby_cols is not None and len(groupby_cols) > 0:
         title = "Grouped by " + ", ".join([repr(c) for c in groupby_cols])
 
-    return plot_interval_groups(dfs, colors, names, title=title, **layout_kwargs)
+    return plot_interval_groups(dict(dfs), colors, title=title, **layout_kwargs)
 
 
 def plot_interval_groups(
-    dfs: List[pd.DataFrame],
+    dfs: Union[Dict[str, pd.DataFrame], List[pd.DataFrame]],
     colors: Optional[List[str]] = None,
-    names: Optional[List[str]] = None,
     **layout_kwargs,
 ) -> Figure:
     if not colors:
         colors = ["red", "green", "blue"]
 
-    if not names:
-        names = [str(i) for i in range(len(dfs))]
-    assert len(names) == len(
-        dfs
-    ), "Expected number of names to match number of DataFrames."
+    if isinstance(dfs, list):
+        dfs = [("", df) for df in dfs]
+    elif isinstance(dfs, dict):
+        dfs = [(name, df) for name, df in dfs.items()]
 
     hspan = 1.0
 
     offset = 0.0
     traces = []
     tickvals, ticktext = [], []
-    for i, df in enumerate(dfs):
+    for i, (name, df) in enumerate(dfs):
         for interval in df.itertuples(index=False, name=None):
             traces.append(
                 create_trace_from_interval(
@@ -60,18 +56,18 @@ def plot_interval_groups(
                     offset=offset,
                     span=hspan,
                     color=colors[i % len(colors)],
-                    name=names[i],
+                    name=name,
                 )
             )
         tickvals.append(offset)
-        ticktext.append(f"{names[i]}   ")
+        ticktext.append(f"{name}   ")
         offset -= hspan
 
     y_pad = min((1 - 0.1 * hspan * len(dfs)) / 2, 0.1 * hspan)
     y_range = [offset - y_pad, hspan + y_pad]
 
-    x_min = min(df["start"].min() for df in dfs)
-    x_max = max(df["end"].max() for df in dfs)
+    x_min = min(df["start"].min() for _, df in dfs)
+    x_max = max(df["end"].max() for _, df in dfs)
     x_span = x_max - x_min
     x_pad = x_span * 0.1
     x_range = [x_min - x_pad, x_max + x_pad]
