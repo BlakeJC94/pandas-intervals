@@ -77,7 +77,8 @@ We can also plot intervals using a plotly backend (if available):
 ```python
 df_a.ivl.plot()
 ```
-![image](https://github.com/BlakeJC94/pandas-intervals/assets/16640474/d3b847ad-1d48-49ad-8d93-2d287949851e)
+![image](https://github.com/BlakeJC94/pandas-intervals/assets/16640474/4133ac9c-def5-4a4a-8cc8-d17badf9c054)
+
 
 
 Multiple groups of intervals can also be plotted on the same graph as well:
@@ -90,7 +91,7 @@ for df in [df_a, df_b, df_c]:
 results = pd.concat(results)
 results.ivl.plot(groupby_cols=['group'])
 ```
-![image](https://github.com/BlakeJC94/pandas-intervals/assets/16640474/609f1771-891a-4fa1-ab93-57ee3365d94d)
+![image](https://github.com/BlakeJC94/pandas-intervals/assets/16640474/cad158ca-042b-4878-9377-639094ece0d8)
 
 
 ## Extensions
