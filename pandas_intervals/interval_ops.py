@@ -19,9 +19,8 @@ def intervals_union(dfs: List[pd.DataFrame]) -> pd.DataFrame:
     return pd.concat(dfs, axis=0).drop_duplicates()
 
 
-# TODO Upgrade to vectorised version
 # np.searchsorted
-def intervals_intersection(
+def _intervals_intersection(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -44,7 +43,12 @@ def intervals_intersection(
 
     breakpoint()
     return pd.concat(results, axis=0)
-    # return intersection_basic(df_a, df_b)
+
+def intervals_intersection(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+) -> pd.DataFrame:
+    return intersection_basic(df_a, df_b)
 
 
 # TODO Upgrade to vectorised version
