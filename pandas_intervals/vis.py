@@ -2,6 +2,8 @@ from typing import Dict, Any, List, Optional, Tuple
 
 import pandas as pd
 
+from .utils import _df_groups
+
 try:
     import plotly.graph_objects as go
 except ImportError:
@@ -11,6 +13,26 @@ Figure = go.Figure if go is not None else None
 
 
 def plot_intervals(
+    df: pd.DataFrame,
+    groupby_cols: Optional[List[str]] = None,
+    colors: Optional[List[str]] = None,
+    **layout_kwargs,
+) -> go.Figure:
+    dfs = []
+    names = []
+    for group, df in _df_groups([df], groupby_cols=groupby_cols):
+        group_name = group if group is not None else ""
+        names.append(str(group_name))
+        dfs.extend(df)
+
+    title = None
+    if groupby_cols is not None and len(groupby_cols) > 0:
+        title = "Grouped by " + ", ".join([repr(c) for c in groupby_cols])
+
+    return plot_interval_groups(dfs, colors, names, title=title, **layout_kwargs)
+
+
+def plot_interval_groups(
     dfs: List[pd.DataFrame],
     colors: Optional[List[str]] = None,
     names: Optional[List[str]] = None,
@@ -21,7 +43,9 @@ def plot_intervals(
 
     if not names:
         names = [str(i) for i in range(len(dfs))]
-    assert len(names) == len(dfs), "Expected number of names to match number of DataFrames."
+    assert len(names) == len(
+        dfs
+    ), "Expected number of names to match number of DataFrames."
 
     hspan = 1.0
 

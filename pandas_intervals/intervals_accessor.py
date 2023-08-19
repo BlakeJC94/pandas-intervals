@@ -197,19 +197,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             raise ImportError("Plotting intervals requires `plotly` to be installed")
 
         groupby_cols = groupby_cols or self.groupby_cols
-
-        dfs = []
-        names = []
-        for group, df in _df_groups([self.df], groupby_cols=groupby_cols):
-            group_name = group if group is not None else ""
-            names.append(str(group_name))
-            dfs.extend(df)
-
-        title = None
-        if len(groupby_cols) > 0:
-            title = "Grouped by " + ", ".join([repr(c) for c in groupby_cols])
-
-        return plot_intervals(dfs, colors, names, title=title, **layout_kwargs)
+        return plot_intervals(self.df, groupby_cols, **layout_kwargs)
 
     def sort(self) -> pd.DataFrame:
         results = sort_intervals(
