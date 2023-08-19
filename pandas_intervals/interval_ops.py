@@ -19,8 +19,7 @@ def intervals_union(dfs: List[pd.DataFrame]) -> pd.DataFrame:
     return pd.concat(dfs, axis=0).drop_duplicates()
 
 
-# np.searchsorted
-def _intervals_intersection(
+def intervals_intersection(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -38,17 +37,10 @@ def _intervals_intersection(
 
         # When the insertion index is the same for both the interval start and end, the
         # interval has no overlapping intervals in the reference set
-        mask_no_overlap_ref = (start_insert_idxs == end_insert_idxs)
-        results.append(df[mask_no_overlap_ref])
+        mask_no_overlap_ref = start_insert_idxs == end_insert_idxs
+        results.append(df[~mask_no_overlap_ref])
 
-    breakpoint()
     return pd.concat(results, axis=0)
-
-def intervals_intersection(
-    df_a: pd.DataFrame,
-    df_b: pd.DataFrame,
-) -> pd.DataFrame:
-    return intersection_basic(df_a, df_b)
 
 
 # TODO Upgrade to vectorised version
