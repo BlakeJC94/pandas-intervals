@@ -23,20 +23,20 @@ We can represent these sets in `python` using `DataFrames`, and
 import pandas as pd
 import pandas_intervals
 
-vf_a = pd.DataFrame(
+df_a = pd.DataFrame(
     [
         [50, 100],
         [150, 200],
         [300, 450],
     ],
 ).ivl()
-print(vf_a)
+print(df_a)
 #    start    end
 # 0   50.0  100.0
 # 1  150.0  200.0
 # 2  300.0  450.0
 
-vf_b = pd.DataFrame(
+df_b = pd.DataFrame(
     [
         [10, 40],
         [80, 120],
@@ -46,7 +46,7 @@ vf_b = pd.DataFrame(
         [510, 550],
     ],
 ).ivl()
-print(vf_b)
+print(df_b)
 #    start    end
 # 0   10.0   40.0
 # 1   80.0  120.0
@@ -58,26 +58,36 @@ print(vf_b)
 
 We have all the standard methods available to DataFrames, but we also now have native interval set operations implemented trhough the `ivl` accessor:
 ```python
-union = vf_a.ivl.union(vf_b)
+union = df_a.ivl.union(df_b)
 
-intersection = vf_a.ivl.intersection(vf_b)
+intersection = df_a.ivl.intersection(df_b)
 
-combined = vf_a.ivl.combine(vf_b)
+combined = df_a.ivl.combine(df_b)
 
-padded = vf_a.ivl.pad(10)  # Optional kwargs: `left_pad`, `right_pad`
+padded = df_a.ivl.pad(10)  # Optional kwargs: `left_pad`, `right_pad`
 
-diff = vf_a.ivl.diff(vf_b)
+diff = df_a.ivl.diff(df_b)
 
-complement = vf_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
+complement = df_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
 
-vf_a_contains_vf_b = vf_a.ivl.contains(vf_b)
+df_a_contains_df_b = df_a.ivl.contains(df_b)
 ```
 
 We can also plot these intervals using a plotly backend (if available):
 ```python
-vf_a.ivl.plot()  # Plot a single DataFrame of intervals
-vf_a.ivl.plot(vf_b)  # Compare multiple DataFrames of intervals on a plot
+df_a.ivl.plot()  # Plot a single DataFrame of intervals
+
+# Plot multiple groups of intervals on the same plot
+results = []
+for df in [df_a, df_b, df_c]:
+    df['group'] = i
+    results.append(df)
+
+results = pd.concat(results)
+results.ivl.plot(groupby_cols=['group'])
 ```
+
+## Extensions
 
 This interface can easily be extended, we can add additional columns with default values and types.
 For example, if we want to create an intervals accessor called `"regions"` which

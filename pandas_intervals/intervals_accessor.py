@@ -190,11 +190,21 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def span(self) -> float:
         return self.df["end"].max() - self.df["start"].min()
 
-    def plot(self, *dfs):
+    def plot(
+        self,
+        groupby_cols: Optional[List[str]] = None,
+        colors: Optional[List[str]] = None,
+        **layout_kwargs,
+    ):
         if plotly is None:
             raise ImportError("Plotting intervals requires `plotly` to be installed")
-        dfs = [self.df, *[self.format(df) for df in dfs]]
-        return plot_intervals(dfs)
+
+        groupby_cols = groupby_cols or self.groupby_cols
+
+        dfs = []
+        for _, df in _df_groups([self.df], groupby_cols=groupby_cols):
+            dfs.extend(df)
+        return plot_intervals(dfs, colors, **layout_kwargs)
 
     def sort(self) -> pd.DataFrame:
         results = sort_intervals(

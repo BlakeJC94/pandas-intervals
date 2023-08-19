@@ -1,83 +1,88 @@
-from typing import Dict, Any, List, Union, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple
 
-import numpy as np
 import pandas as pd
+
 try:
     import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
 except ImportError:
     go = None
-    make_subplots = None
 
 Figure = go.Figure if go is not None else None
 
-# TODO Refactor
+
 def plot_intervals(
     dfs: List[pd.DataFrame],
-    names: Optional[str] = None,
-    colors: Union[List[str], str] = "red",
-    x_buffer: float = 200,
-    y_buffer: float = 0.05,
+    colors: Optional[List[str]] = None,
+    **layout_kwargs,
 ) -> Figure:
+    if not colors:
+        colors = ["red", "green", "blue"]
 
-    # for i in range(len(intervals_group)):
-    #     if isinstance(intervals_group[i], pd.DataFrame):
-    #         intervals_group[i] = intervals_group[i][["start", "end"]].values
+    hspan = 1.0
 
-    if isinstance(colors, str):
-        colors = [colors]
-
-    n_dfs = len(dfs)
-    if len(colors) == 1:
-        colors = n_dfs * colors
-    if len(colors) < n_dfs:
-        raise ValueError("Unexpected number of colors supplied.")
-
-    if names is None:
-        names = [f"Intervals {i+1}" for i in range(n_dfs)]
-    if len(names) < n_dfs:
-        raise ValueError()
-
-    main_figure = make_subplots(
-        rows=n_dfs,
-        cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.2,
-        subplot_titles=names,
-    )
-
+    offset = 0.0
+    traces = []
+    tickvals, ticktext = [], []
     for i, df in enumerate(dfs):
-        for j in range(len(df)):
-            interval = df.iloc[j]['start'], df.iloc[j]['end']
-            trace = create_trace_from_interval(interval, y_buffer, colors[i])
-            main_figure.append_trace(trace, row=i + 1, col=1)
+        for interval in df.itertuples(index=False, name=None):
+            traces.append(
+                create_trace_from_interval(
+                    interval,
+                    offset=offset,
+                    span=hspan,
+                    color=colors[i % len(colors)],
+                )
+            )
+        tickvals.append(offset)
+        ticktext.append(f"{i}   ")
+        offset -= hspan
 
-    main_figure.update_yaxes(range=[0, 1], showticklabels=False)
-    main_figure.update_xaxes(
-        range=[
-            np.min(np.concatenate(dfs, axis=0)) - x_buffer,
-            np.max(np.concatenate(dfs, axis=0)) + x_buffer,
-        ],
+    y_pad = min((1 - 0.1 * hspan * len(dfs)) / 2, 0.1 * hspan)
+    y_range = [offset - y_pad, hspan + y_pad]
+
+    x_min = min(df["start"].min() for df in dfs)
+    x_max = max(df["end"].max() for df in dfs)
+    x_span = x_max - x_min
+    x_pad = x_span * 0.1
+    x_range = [x_min - x_pad, x_max + x_pad]
+
+    fig = go.Figure(traces)
+    fig.update_layout(showlegend=False, **layout_kwargs)
+    fig.update_xaxes(
+        range=x_range,
+        gridcolor="lightgrey",
+        linecolor="lightgrey",
+        showspikes=True,
+        spikecolor="black",
+        spikesnap="cursor",
+        spikemode="across",
     )
-    main_figure.update_layout(height=200 * len(dfs), xaxis_showgrid=False)
-    return main_figure
+    fig.update_yaxes(
+        range=y_range,
+        tickvals=tickvals,
+        ticktext=ticktext,
+    )
+
+    fig.show()
+    return fig
 
 
 def create_trace_from_interval(
     interval: Tuple[float],
-    y_buffer: float = 0,
+    offset: float = 0.0,
+    span: float = 1.0,
     color: str = "red",
 ) -> Dict[str, Any]:
-    start, end = interval
-    lower, upper = y_buffer, 1 - y_buffer
+    start, end, *metadata = interval
+    lower, upper = offset - 0.4 * span, offset + 0.4 * span
     return go.Scatter(
         x=[start, start, end, end, start],
         y=[lower, upper, upper, lower, lower],
         mode="lines",
         name="",
         showlegend=False,
-        marker={"color": color},
+        marker=dict(color=color),
         fill="toself",
         hoveron="fills",
-        text=f"[ {start} , {end} ]",
+        text=f"( {start} , {end} ] ({str(metadata)})",
     )
