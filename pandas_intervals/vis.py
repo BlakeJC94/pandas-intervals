@@ -40,7 +40,7 @@ def plot_intervals(
                 )
             )
         tickvals.append(offset)
-        ticktext.append(f"{i}   ")
+        ticktext.append(f"{names[i]}   ")
         offset -= hspan
 
     y_pad = min((1 - 0.1 * hspan * len(dfs)) / 2, 0.1 * hspan)

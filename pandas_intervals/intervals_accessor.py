@@ -204,7 +204,8 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         dfs = []
         names = []
         for group, df in _df_groups([self.df], groupby_cols=groupby_cols):
-            names.append(str(group))
+            group_name = group if group is not None else ""
+            names.append(str(group_name))
             dfs.extend(df)
 
         title = None
