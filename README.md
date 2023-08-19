@@ -73,11 +73,15 @@ complement = df_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_boun
 df_a_contains_df_b = df_a.ivl.contains(df_b)
 ```
 
-We can also plot these intervals using a plotly backend (if available):
+We can also plot intervals using a plotly backend (if available):
 ```python
-df_a.ivl.plot()  # Plot a single DataFrame of intervals
+df_a.ivl.plot()
+```
+![image](https://github.com/BlakeJC94/pandas-intervals/assets/16640474/d3b847ad-1d48-49ad-8d93-2d287949851e)
 
-# Plot multiple groups of intervals on the same plot
+
+Multiple groups of intervals can also be plotted on the same graph as well:
+```python
 results = []
 for df in [df_a, df_b, df_c]:
     df['group'] = i
@@ -86,6 +90,8 @@ for df in [df_a, df_b, df_c]:
 results = pd.concat(results)
 results.ivl.plot(groupby_cols=['group'])
 ```
+![image](https://github.com/BlakeJC94/pandas-intervals/assets/16640474/609f1771-891a-4fa1-ab93-57ee3365d94d)
+
 
 ## Extensions
 
