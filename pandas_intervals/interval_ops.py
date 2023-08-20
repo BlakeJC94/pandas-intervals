@@ -59,22 +59,16 @@ def intervals_complement(
     )
 
 
-# TODO Upgrade to vectorised version
-def intervals_overlap(
-    df: pd.DataFrame,
-):
+def intervals_overlap(df: pd.DataFrame):
     if df.empty:
         return df
-    return df.loc[_get_overlapping_mask(df)]
+    return df.loc[(_get_overlapping_mask(df) > 0)]
 
 
-# TODO Upgrade to vectorised version
-def intervals_non_overlap(
-    df: pd.DataFrame,
-):
+def intervals_non_overlap(df: pd.DataFrame):
     if df.empty:
         return df
-    return df.loc[~_get_overlapping_mask(df)]
+    return df.loc[~(_get_overlapping_mask(df) > 0)]
 
 
 # TODO Upgrade to vectorised version
