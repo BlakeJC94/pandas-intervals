@@ -42,20 +42,51 @@ def intervals_intersection(
     return pd.concat(results, axis=0)
 
 
-# TODO Upgrade to vectorised version
 def intervals_complement(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
     left_bound: Optional[float] = None,
     right_bound: Optional[float] = None,
 ):
-    # df = intervals_combine(df, aggregations)
-    return complement_basic(
-        df,
-        aggregations,
-        left_bound,
-        right_bound,
+    if len(df) == 0:
+        return df
+
+    df = intervals_combine(df, aggregations=aggregations).sort_values("start")
+
+    (start_first, end_first), metadata_first = df.iloc[0, :2], df.iloc[0, 2:]
+    (_start_last, end_last), metadata_last = df.iloc[-1, :2], df.iloc[-1, 2:]
+    if left_bound is None:
+        left_bound = end_first
+    if right_bound is None:
+        right_bound = end_last
+
+    edges: List[pd.Series] = []
+    if left_bound < start_first:
+        left_edge = metadata_first
+        left_edge["start"] = left_bound
+        left_edge["end"] = start_first
+        left_edge = left_edge[df.columns]
+        edges.append(left_edge)
+    if end_last < right_bound:
+        right_edge = metadata_last
+        right_edge["start"] = end_last
+        right_edge["end"] = right_bound
+        right_edge = right_edge[df.columns]
+        edges.append(right_edge)
+
+    # TODO Find more efficient way to groupby and aggregate with these overlaps across rows
+    df_c = pd.concat(
+        [
+            df.iloc[:-1].reset_index(drop=True),
+            df.iloc[1:].reset_index(drop=True),
+        ]
     )
+    df_c = df_c.groupby(df_c.index).agg(aggregations)
+    df_c["start"] = df.iloc[:-1, 1].to_numpy()
+    df_c["end"] = df.iloc[1:, 0].to_numpy()
+    df_c = df_c[df.columns]
+
+    return pd.concat([*edges, df_c], axis=0).sort_values("start")
 
 
 def intervals_overlap(df: pd.DataFrame):
@@ -70,7 +101,6 @@ def intervals_non_overlap(df: pd.DataFrame):
     return df.loc[~(_get_overlapping_mask(df) > 0)]
 
 
-# TODO Upgrade to vectorised version
 def intervals_combine(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
@@ -92,22 +122,6 @@ def intervals_combine(
     df_sorted_overlap_agg = df_sorted_overlap.groupby(group_inds).agg(aggregations)
 
     return pd.concat([df_sorted_non_overlap, df_sorted_overlap_agg], axis=0)
-
-    # Loop over labels and compare each to the previous label to find labels to combine
-    # group_inds = []
-    # ind, interval_end_time = 0, 0
-    # for start, end in df_sorted[["start", "end"]].values:
-    #     # If interval is within previous label, combine them
-    #     if start <= interval_end_time:
-    #         interval_end_time = max(interval_end_time, end)
-    #         group_inds.append(ind)
-    #     # If not, start a new interval
-    #     else:
-    #         interval_end_time = end
-    #         ind += 1
-    #         group_inds.append(ind)
-
-    # return df_sorted.groupby(group_inds).agg(aggregations)
 
 
 def intervals_difference(
