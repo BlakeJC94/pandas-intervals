@@ -9,12 +9,11 @@ try:
 except ImportError:
     plotly = None
 
-from .interval_ops import (
-    intervals_union,
-    intervals_intersection,
-    intervals_complement,
+from .ops import (
     intervals_overlap,
     intervals_non_overlap,
+    intervals_intersection,
+    intervals_complement,
     intervals_combine,
     intervals_difference,
 )
