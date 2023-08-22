@@ -10,7 +10,6 @@ from .interval_utils import (
 )
 from tests.helpers import (
     combine_basic,
-    intersection_basic,
     complement_basic,
 )
 
@@ -76,7 +75,39 @@ def intervals_combine(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
-    return combine_basic(df, aggregations)
+    if df.empty:
+        return df
+
+    aggregations = aggregations or {"start": "min", "end": "max"}
+    aggregations.update({c: "first" for c in df.columns if c not in aggregations})
+    df_sorted = df.sort_values("start")
+
+    # Filter out non_overlapping intervals to those that overlap
+    overlap_mask = _get_overlapping_mask(df_sorted)
+    df_sorted_non_overlap = df_sorted.loc[overlap_mask == 0]
+    df_sorted_overlap = df_sorted.loc[overlap_mask > 0]
+
+    # Aggregate overlaps
+    group_inds = overlap_mask[overlap_mask > 0]
+    df_sorted_overlap_agg = df_sorted_overlap.groupby(group_inds).agg(aggregations)
+
+    return pd.concat([df_sorted_non_overlap, df_sorted_overlap_agg], axis=0)
+
+    # Loop over labels and compare each to the previous label to find labels to combine
+    # group_inds = []
+    # ind, interval_end_time = 0, 0
+    # for start, end in df_sorted[["start", "end"]].values:
+    #     # If interval is within previous label, combine them
+    #     if start <= interval_end_time:
+    #         interval_end_time = max(interval_end_time, end)
+    #         group_inds.append(ind)
+    #     # If not, start a new interval
+    #     else:
+    #         interval_end_time = end
+    #         ind += 1
+    #         group_inds.append(ind)
+
+    # return df_sorted.groupby(group_inds).agg(aggregations)
 
 
 def intervals_difference(
