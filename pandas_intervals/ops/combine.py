@@ -26,4 +26,3 @@ def intervals_combine(
     df_sorted_overlap_agg = df_sorted_overlap.groupby(group_inds).agg(aggregations)
 
     return pd.concat([df_sorted_non_overlap, df_sorted_overlap_agg], axis=0)
-

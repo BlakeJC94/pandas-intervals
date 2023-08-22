@@ -8,7 +8,9 @@ from pandas_intervals.utils import comma_join
 import pandas as pd
 
 
-@pd.api.extensions.register_dataframe_accessor("reg")  # Name of new accessor, pd.DataFrame.<name>
+@pd.api.extensions.register_dataframe_accessor(
+    "reg"
+)  # Name of new accessor, pd.DataFrame.<name>
 class RegionsAccessor(IntervalsAccessor):
     # Additional required columns can be specified in a list of tuple
     # where each tuple is `(column_name, dtype, aggregation)`
@@ -35,7 +37,7 @@ class RegionsAccessor(IntervalsAccessor):
     # Create constructors to parse and validate data from other sources
     @classmethod
     def from_json(cls, filepath: PathLike) -> pd.DataFrame:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             intervals = json.load(f)
 
         assert isinstance(intervals, list)
