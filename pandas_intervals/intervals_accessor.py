@@ -21,13 +21,14 @@ from .vis import plot_intervals
 from .utils import _apply_operation_to_groups, sort_intervals
 
 
-# When I use the accessor,
-# * Check dataframe has required columns
-# * Add additional cols w/defaults
-# * Check types and change if needed
-
-
+# TODO Improve docs
 class FieldsTrait:
+    """Mixin used to set the essential columns/types of a DataFrame of interval-like objects.
+
+    Provides a scaffold for extending this further to add more columns with custom names, default
+    values, and aggregation methods.
+    """
+
     _required_fields = [("start", "float64", "min"), ("end", "float64", "max")]
     additional_fields = []
     default_values = {}
@@ -78,6 +79,17 @@ class FieldsTrait:
 
 
 class FormatTrait:
+    """Mixin used for providing a `format` method for an Accessor class.
+
+    When the accessor is used, the `__init__` method will call the `format` method defined to
+    * Check DataFrame has required columns,
+    * Add additional cols with configured defaults,
+    * Check types and change if needed.
+
+    This will ensure that all the operations on DataFrames of interval-like objects have controlled
+    types and column names and orders across all operations used throughout this extension.
+    """
+
     @classmethod
     def format(cls, pandas_obj: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         if pandas_obj is None or pandas_obj.columns.empty:
