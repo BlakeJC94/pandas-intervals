@@ -217,9 +217,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
         return results.reset_index(drop=True)
 
+    # TODO Test
     def contains(self, df: pd.DataFrame) -> bool:
-        df = self.format(df).drop_duplicates()
-        df_all = intervals_union([self.df, df])
+        df = df.drop_duplicates()
+        df_all = self.union(df)
         return len(self.df.drop_duplicates()) == len(df_all)
 
     def pad(
@@ -263,7 +264,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def union(self, *dfs) -> pd.DataFrame:
         interval_sets = [self.df, *[self.format(df) for df in dfs]]
-        return intervals_union(interval_sets)
+        return pd.concat(interval_sets, axis=0).drop_duplicates()
 
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
         return self.apply_to_groups(
