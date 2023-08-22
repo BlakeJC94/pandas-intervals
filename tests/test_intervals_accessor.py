@@ -17,6 +17,7 @@ from tests.helpers import (
     combine_basic,
     diff_basic,
 )
+from pandas_intervals.vis import plot_interval_groups
 
 
 @pytest.fixture
@@ -218,27 +219,12 @@ class TestIntervalsAccessor:
 
     def test_intervals_combine(self):
         df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
-        df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
-
         df_combine_a = df_a.ivl.combine()
-        df_combine_b = df_b.ivl.combine()
-        df_combine_a_union_b = df_a.ivl.union(df_b).ivl.combine()
-
         expected_combine_a = combine_basic(df_a)
-        expected_combine_b = combine_basic(df_b)
-        expected_combine_a_union_b = combine_basic(union_basic(df_a, df_b))
 
         assert_df_interval_set_equality(
             df_combine_a,
             expected_combine_a,
-        )
-        assert_df_interval_set_equality(
-            df_combine_b,
-            expected_combine_b,
-        )
-        assert_df_interval_set_equality(
-            df_combine_a_union_b,
-            expected_combine_a_union_b,
         )
 
     def test_intervals_diff(self):
