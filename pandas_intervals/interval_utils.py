@@ -1,9 +1,10 @@
-from typing import Union, List, Tuple, Optional
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
-from tests.helpers import _overlap_mask_basic
+DEBUG = False
 
 
 def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
@@ -30,27 +31,19 @@ def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
     (idxs_result_1,) = mask_result_1.nonzero()  # Which idxs are the start of new group?
     idxs_overlap_groups = idxs_result_1
 
-    # Create mask for prev index
+    # Check indices before result==1 and filter to those which are equal to 0
     idxs_result_1_prev = idxs_result_1 - 1
-    mask_result_1_prev = np.zeros(len(result), dtype=bool)
-    mask_result_1_prev[idxs_result_1_prev] = 1
+    check_idxs_results_1_prev_down = result[idxs_result_1_prev] < 1
+    idxs_result_1_prev_down = idxs_result_1_prev[check_idxs_results_1_prev_down]
+    idxs_overlap_groups = np.intersect1d(
+        idxs_overlap_groups, idxs_result_1_prev_down + 1
+    )
 
-    # Filter idxs_result_1 to only those which have zero before
-    check_result_1_prev = result * mask_result_1_prev
-    mask_result_1_prev_0 = check_result_1_prev == 0
-    (idxs_result_1_prev_0,) = mask_result_1_prev_0.nonzero()
-    idxs_overlap_groups = np.intersect1d(idxs_overlap_groups, idxs_result_1_prev_0 + 1)
-
-    # Create mask for next index
-    idxs_result_1_next = idxs_result_1 - 1
-    mask_result_1_next = np.zeros(len(result), dtype=bool)
-    mask_result_1_next[idxs_result_1_next] = 1
-
-    # Filter idxs_result_1 to only those which are above 1 after
-    check_result_1_next = result * mask_result_1_next
-    mask_result_1_next_0 = check_result_1_next > 1
-    (idxs_result_1_next_0,) = mask_result_1_next_0.nonzero()
-    idxs_overlap_groups = np.intersect1d(idxs_overlap_groups, idxs_result_1_next_0 - 1)
+    # Check indices before result==1 and filter to those which are equal to 0
+    idxs_result_1_next = idxs_result_1 + 1
+    check_idxs_results_1_next_up = result[idxs_result_1_next] > 1
+    idxs_result_1_next_up = idxs_result_1_next[check_idxs_results_1_next_up]
+    idxs_overlap_groups = np.intersect1d(idxs_overlap_groups, idxs_result_1_next_up - 1)
 
     # Get integer mask of results of different overlap groups
     mask_overlap_groups = np.zeros(len(result), dtype=int)
