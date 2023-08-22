@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-DEBUG = False
-
 
 def _get_overlapping_mask(df: pd.DataFrame) -> np.ndarray:
     # Split out starts and ends, append interval index column
