@@ -221,9 +221,7 @@ def combine_basic(
     if df.empty:
         return df
 
-    if aggregations is None:
-        aggregations = {"start": "min", "end": "max"}
-
+    aggregations = aggregations or {"start": "min", "end": "max"}
     aggregations.update({c: "first" for c in df.columns if c not in aggregations})
     df_sorted = df.sort_values("start")
 
