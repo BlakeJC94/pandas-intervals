@@ -1,5 +1,5 @@
 from itertools import permutations
-from typing import Callable, Iterable, Union, List, Dict, Tuple, Any, Optional
+from typing import Callable, Union, List, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -8,11 +8,6 @@ from .interval_utils import (
     _get_overlapping_mask,
     _atomize_intervals,
 )
-from tests.helpers import (
-    combine_basic,
-    complement_basic,
-)
-
 
 def intervals_union(dfs: List[pd.DataFrame]) -> pd.DataFrame:
     return pd.concat(dfs, axis=0).drop_duplicates()
