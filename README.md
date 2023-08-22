@@ -65,7 +65,7 @@ print(df_b)
 # 5  510.0  550.0
 ```
 
-We have all the standard methods available to DataFrames, but we also now have native interval set operations implemented trhough the `ivl` accessor:
+We have all the standard methods available to DataFrames, but we also now have native interval set operations implemented through the `ivl` accessor:
 ```python
 union = df_a.ivl.union(df_b)
 
@@ -82,7 +82,7 @@ complement = df_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_boun
 df_a_contains_df_b = df_a.ivl.contains(df_b)
 ```
 
-We can also plot intervals using a plotly backend (if available):
+We can also plot intervals using a Plotly backend (if available):
 ```python
 df_a.ivl.plot()
 ```
