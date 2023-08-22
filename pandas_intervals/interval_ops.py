@@ -74,14 +74,7 @@ def intervals_complement(
         right_edge = right_edge[df.columns]
         edges.append(right_edge)
 
-    # TODO Find more efficient way to groupby and aggregate with these overlaps across rows
-    df_c = pd.concat(
-        [
-            df.iloc[:-1].reset_index(drop=True),
-            df.iloc[1:].reset_index(drop=True),
-        ]
-    )
-    df_c = df_c.groupby(df_c.index).agg(aggregations)
+    df_c = df.rolling(2).agg(aggregations).iloc[1:]
     df_c["start"] = df.iloc[:-1, 1].to_numpy()
     df_c["end"] = df.iloc[1:, 0].to_numpy()
     df_c = df_c[df.columns]
