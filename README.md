@@ -80,6 +80,8 @@ diff = df_a.ivl.diff(df_b)
 complement = df_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
 
 df_a_contains_df_b = df_a.ivl.contains(df_b)
+
+df_a_min_dist_to_b = df_a.ivl.nearest(df_b)
 ```
 
 We can also plot intervals using a Plotly backend (if available):
