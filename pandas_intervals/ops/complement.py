@@ -14,6 +14,8 @@ def intervals_complement(
     if len(df) == 0:
         return df
 
+    aggregations = aggregations or {"start": "min", "end": "max"}
+    aggregations.update({c: "first" for c in df.columns if c not in aggregations})
     df = intervals_combine(df, aggregations=aggregations).sort_values("start")
 
     (start_first, end_first), metadata_first = df.iloc[0, :2], df.iloc[0, 2:]
