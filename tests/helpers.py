@@ -276,7 +276,7 @@ def complement_basic(
     return pd.DataFrame(results, columns=df_a.columns)
 
 
-def diff_basic(
+def difference_basic(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,

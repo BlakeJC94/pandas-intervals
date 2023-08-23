@@ -15,7 +15,7 @@ from tests.helpers import (
     union_basic,
     intersection_basic,
     combine_basic,
-    diff_basic,
+    difference_basic,
 )
 from pandas_intervals.vis import plot_interval_groups
 
@@ -227,15 +227,15 @@ class TestIntervalsAccessor:
             expected_combine_a,
         )
 
-    def test_intervals_diff(self):
+    def test_intervals_difference(self):
         df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
         df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         df_a_diff_b = df_a.ivl.diff(df_b)
         df_b_diff_a = df_b.ivl.diff(df_a)
 
-        expected_a_diff_b = diff_basic(df_a, df_b)
-        expected_b_diff_a = diff_basic(df_b, df_a)
+        expected_a_diff_b = difference_basic(df_a, df_b)
+        expected_b_diff_a = difference_basic(df_b, df_a)
 
         assert_df_interval_set_equality(
             df_a_diff_b,
