@@ -358,13 +358,13 @@ def nearest_basic(
             if end_a <= start_b:
                 min_dist = min(min_dist, start_b - end_a)
             # Intersections should result in zero distances
-            # if (
-            #     (start_a < start_b < end_a)
-            #     or (start_a < end_b < end_a)
-            #     or (start_b < start_a < end_b)
-            #     or (start_b < end_a < end_b)
-            # ):
-            #     min_dist = 0
+            if (
+                (start_a < start_b < end_a)
+                or (start_a < end_b < end_a)
+                or (start_b < start_a < end_b)
+                or (start_b < end_a < end_b)
+            ):
+                min_dist = 0
         results.append(min_dist)
 
     return df_a.assign(min_dist=results)

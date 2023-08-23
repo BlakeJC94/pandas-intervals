@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from .intersection import _get_mask_no_ref_overlap
+
 
 def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     """Given DataFrames A and B containing columns `["start", "end"]` where each row represents an
@@ -31,6 +33,9 @@ def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     right_dist = np.abs(starts_b[idxs_b_right_of_a] - ends_a)
     right_dist[mask_idxs_b_right_inf] = np.inf
 
-    # Map negative distances to 0
+    # Map negative distances and overlaps to 0
     min_dist = np.minimum(left_dist, right_dist).clip(0)
+    mask_non_overlap = _get_mask_no_ref_overlap(df_b, df_a)
+    min_dist[~mask_non_overlap] = 0
+
     return df_a.assign(min_dist=min_dist)
