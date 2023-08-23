@@ -340,3 +340,23 @@ def difference_basic(
             results.append((start_a, end_a, *metadata))
 
     return pd.DataFrame(results, columns=df_a.columns)
+
+
+def nearest_basic(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+) -> pd.DataFrame:
+    intervals_a = df_to_list(df_a)
+    starts_b, ends_b = df_b[["start", "end"]].to_numpy().T
+
+    results = []
+    for start_a, end_a, *_ in intervals_a:
+        result = np.concatenate(
+            [
+                start_a - ends_b[ends_b <= start_a],
+                starts_b[end_a <= starts_b] - end_a,
+            ]
+        )
+        results.append(result.min())
+
+    return df_a.assign(min_dist=results)

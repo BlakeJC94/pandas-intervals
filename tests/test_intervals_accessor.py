@@ -9,6 +9,7 @@ import pandas_intervals
 from tests.helpers import (
     assert_df_interval_set_equality,
     complement_basic,
+    nearest_basic,
     random_intervals,
     overlap_basic,
     non_overlap_basic,
@@ -16,6 +17,7 @@ from tests.helpers import (
     intersection_basic,
     combine_basic,
     difference_basic,
+    intervals_from_str,
 )
 from pandas_intervals.vis import plot_interval_groups
 
@@ -245,3 +247,12 @@ class TestIntervalsAccessor:
             df_b_diff_a,
             expected_b_diff_a,
         )
+
+    def test_intervals_nearest(self):
+        df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
+        df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
+
+        result = df_a.ivl.nearest(df_b)
+        expected = nearest_basic(df_a, df_b)
+
+        assert result['min_dist'].tolist() == expected['min_dist'].tolist()
