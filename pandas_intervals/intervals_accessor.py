@@ -16,6 +16,7 @@ from .ops import (
     intervals_complement,
     intervals_combine,
     intervals_difference,
+    intervals_nearest,
 )
 from .vis import plot_intervals
 from .utils import _apply_operation_to_groups, sort_intervals
@@ -281,5 +282,11 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def diff(self, df: pd.DataFrame):
         return self.apply_to_groups(
             intervals_difference,
+            [self.df, self.format(df)],
+        )
+
+    def nearest(self, df: pd.DataFrame):
+        return self.apply_to_groups(
+            intervals_nearest,
             [self.df, self.format(df)],
         )
