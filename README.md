@@ -167,6 +167,6 @@ class RegionsAccessor(IntervalsAccessor):
 ```
 
 After defining and running this snippet, we now have
-* `pd.DataFrame(..).regions.all_notes()` available as a method on any DataFrame,
-* `pd.DataFrame(..).regions()` will return a formatted DataFrame as specified by the fields in `RegionsAccessor.additional_cols`,
+* `pd.DataFrame(..).reg.all_notes()` available as a method on any DataFrame,
+* `pd.DataFrame(..).reg()` will return a formatted DataFrame as specified by the fields in `RegionsAccessor.additional_cols`,
 * All the methods on the `ivl` accessor come along for free!
