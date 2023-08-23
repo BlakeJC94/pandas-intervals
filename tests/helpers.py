@@ -99,7 +99,7 @@ def intervals_from_str(
     )
     intervals[["start", "end"]] = intervals[["start", "end"]].astype(float)
     if all(t == default_tag for t in tags):
-        intervals = intervals.drop(columns=['tag'])
+        intervals = intervals.drop(columns=["tag"])
     elif tags_map:
         intervals["tag"] = intervals["tag"].replace(tags_map)
     return intervals
@@ -149,7 +149,7 @@ def random_intervals(
         md = [random.choice(v) for _, v in random_fields]
         data.append((start, end, *md))
 
-    return pd.DataFrame(data, columns=['start', 'end', *[k for k, _ in random_fields]])
+    return pd.DataFrame(data, columns=["start", "end", *[k for k, _ in random_fields]])
 
 
 def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
@@ -295,7 +295,6 @@ def difference_basic(
 
         # check overlap of selected interval in `a` with bounding intervals in B
         for start_b, end_b, *_ in intervals_b:
-
             # A :          (----]
             # B : (----]
             # If `b` is strictly before `a`, check the interval in `B`
