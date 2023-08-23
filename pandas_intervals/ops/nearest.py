@@ -19,7 +19,6 @@ def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     # For each end_a, find the previous start_b
     idxs_b_left_of_a = np.searchsorted(np.sort(ends_b), starts_a) - 1
     mask_idxs_b_left_inf = idxs_b_left_of_a == -1
-    idxs_b_left_of_a[mask_idxs_b_left_inf] = -1
     # Handle cases when there is no interval in B left of intervals of A
     left_dist = np.abs(ends_b[idxs_b_left_of_a] - starts_a)
     left_dist[mask_idxs_b_left_inf] = np.inf
