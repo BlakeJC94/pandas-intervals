@@ -298,7 +298,7 @@ def difference_basic(
             # A :          (----]
             # B : (----]
             # If `b` is strictly before `a`, check the interval in `B`
-            if end_b <= start_a:
+            if end_b < start_a:
                 continue
 
             # A : (----]
@@ -310,7 +310,7 @@ def difference_basic(
             # A :     (----]
             # B :  (----------]
             # If `b` contains `a`, discard `a` and go to next interval in `A`
-            if start_b <= start_a and end_a <= end_b:
+            if start_b < start_a and end_a <= end_b:
                 keep_label = False
                 break
 
