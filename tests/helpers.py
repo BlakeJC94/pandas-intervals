@@ -230,7 +230,7 @@ def combine_basic(
     ind, interval_end_time = 0, 0
     for start, end in df_sorted[["start", "end"]].values:
         # If interval is within previous label, combine them
-        if start <= interval_end_time:
+        if start < interval_end_time:
             interval_end_time = max(interval_end_time, end)
             group_inds.append(ind)
         # If not, start a new interval
