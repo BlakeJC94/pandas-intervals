@@ -34,7 +34,12 @@ def _apply_operation_to_groups(
         else:
             result = operation(*df_groups, **kwargs)
         results.append(result)
-    return pd.concat(results, axis=0)
+
+    if any(not isinstance(r, pd.DataFrame) for r in results):
+        raise ValueError("Expected to get a list of `DataFrames`.")
+
+    results = pd.concat(results, axis=0)
+    return results
 
 
 def _df_groups(
