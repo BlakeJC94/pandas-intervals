@@ -4,7 +4,6 @@ import pandas as pd
 from .intersection import _get_mask_no_ref_overlap
 
 
-# TODO Consider if returning the index is worthwhile
 def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     """Given DataFrames A and B containing columns `["start", "end"]` where each row represents an
     interval, calculate the distance to the closest interval in B for each row in A.
@@ -14,7 +13,7 @@ def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
         df_b: DataFrame representing intervals. Must contain columns `["start", "end"]`.
 
     Returns:
-        DataFrame A with an additional column `"min_dist"`.
+        DataFrame with column `"min_dist"` and index equal to index of A.
     """
     (starts_a, ends_a) = df_a[["start", "end"]].to_numpy().T
     (starts_b, ends_b) = df_b[["start", "end"]].to_numpy().T
@@ -39,4 +38,7 @@ def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     mask_non_overlap = _get_mask_no_ref_overlap(df_b, df_a)
     min_dist[~mask_non_overlap] = 0
 
-    return df_a.assign(min_dist=min_dist)
+    return pd.DataFrame(
+        {"min_dist": min_dist},
+        index=df_a.index,
+    )

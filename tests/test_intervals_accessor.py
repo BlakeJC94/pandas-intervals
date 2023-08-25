@@ -255,4 +255,4 @@ class TestIntervalsAccessor:
         result = df_a.ivl.nearest(df_b)
         expected = nearest_basic(df_a, df_b)
 
-        assert result['min_dist'].tolist() == expected['min_dist'].tolist()
+        assert result.iloc[:, 0].tolist() == expected.iloc[:, 0].tolist()

@@ -367,4 +367,7 @@ def nearest_basic(
                 min_dist = 0
         results.append(min_dist)
 
-    return df_a.assign(min_dist=results)
+    return pd.DataFrame(
+        {"min_dist": results},
+        index=df_a.index,
+    )
