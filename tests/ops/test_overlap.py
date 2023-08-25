@@ -8,12 +8,21 @@ from tests.helpers import (
     intervals_from_str,
 )
 
-
 @pytest.mark.parametrize(
     "operation, operation_non",
     [(overlap_basic, non_overlap_basic), (intervals_overlap, intervals_non_overlap)],
 )
 class TestIntervalsOverlap:
+    @staticmethod
+    def check_operations(operations, test_case):
+        df_a = intervals_from_str(test_case["a"])
+        df_expected_overlap_a = intervals_from_str(test_case["overlap_a"])
+        df_expected_non_overlap_a = intervals_from_str(test_case["non_overlap_a"])
+        assert_df_interval_set_equality(df_expected_overlap_a, operations[0](df_a))
+        assert_df_interval_set_equality(
+            df_expected_non_overlap_a, operations[1](df_a)
+        )
+
     @pytest.mark.parametrize(
         "test_case",
         [
@@ -33,13 +42,7 @@ class TestIntervalsOverlap:
     def test_it_returns_nothing_when_arg_has_no_overlaps(
         self, test_case, operation, operation_non
     ):
-        df_a = intervals_from_str(test_case["a"])
-        df_expected_overlap_a = intervals_from_str(test_case["overlap_a"])
-        df_expected_non_overlap_a = intervals_from_str(test_case["non_overlap_a"])
-        assert_df_interval_set_equality(df_expected_overlap_a, operation(df_a))
-        assert_df_interval_set_equality(
-            df_expected_non_overlap_a, operation_non(df_a)
-        )
+        self.check_operations((operation, operation_non), test_case)
 
     @pytest.mark.parametrize(
         "test_case",
@@ -75,10 +78,4 @@ class TestIntervalsOverlap:
     def test_it_returns_overlaps_when_arg_has_overlaps(
         self, test_case, operation, operation_non
     ):
-        df_a = intervals_from_str(test_case["a"])
-        df_expected_overlap_a = intervals_from_str(test_case["overlap_a"])
-        df_expected_non_overlap_a = intervals_from_str(test_case["non_overlap_a"])
-        assert_df_interval_set_equality(df_expected_overlap_a, operation(df_a))
-        assert_df_interval_set_equality(
-            df_expected_non_overlap_a, operation_non(df_a)
-        )
+        self.check_operations((operation, operation_non), test_case)

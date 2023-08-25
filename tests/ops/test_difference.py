@@ -1,6 +1,7 @@
 import pytest
 
 from pandas_intervals.ops import intervals_difference
+from pandas_intervals.vis import plot_interval_groups
 from tests.helpers import (
     assert_df_interval_set_equality,
     difference_basic,
@@ -8,8 +9,21 @@ from tests.helpers import (
 )
 
 
-@pytest.mark.parametrize("operation", [difference_basic, intervals_difference])
+@pytest.mark.parametrize(
+    "operation",
+    [
+        difference_basic,
+        intervals_difference,
+    ],
+)
 class TestIntervalsDifference:
+    @staticmethod
+    def check_operation(operation, test_case):
+        df_a = intervals_from_str(test_case["a"])
+        df_b = intervals_from_str(test_case["b"])
+        df_expected = intervals_from_str(test_case["a_diff_b"])
+        assert_df_interval_set_equality(df_expected, operation(df_a, df_b))
+
     @pytest.mark.parametrize(
         "test_case",
         [
@@ -24,6 +38,16 @@ class TestIntervalsDifference:
                     "     (--]      (----]         (--]   (----]              ",
                 ],
             ),
+        ],
+    )
+    def test_it_calculates_results_for_args_no_overlap_within(
+        self, test_case, operation
+    ):
+        self.check_operation(operation, test_case)
+
+    @pytest.mark.parametrize(
+        "test_case",
+        [
             dict(
                 a=[
                     "  (----]    (----]    (----]        (-----] ",
@@ -59,13 +83,8 @@ class TestIntervalsDifference:
             ),
         ],
     )
-    def test_it_calculates_results_for_args_no_overlap_within(
-        self, test_case, operation
-    ):
-        df_a = intervals_from_str(test_case["a"])
-        df_b = intervals_from_str(test_case["b"])
-        df_expected_a_diff_b = intervals_from_str(test_case["a_diff_b"])
-        assert_df_interval_set_equality(df_expected_a_diff_b, operation(df_a, df_b))
+    def test_it_trims_subtracts_one_side(self, test_case, operation):
+        self.check_operation(operation, test_case)
 
     @pytest.mark.parametrize(
         "test_case",
@@ -86,10 +105,7 @@ class TestIntervalsDifference:
         ],
     )
     def test_it_calculates_results_for_args_overlap_within(self, test_case, operation):
-        df_a = intervals_from_str(test_case["a"])
-        df_b = intervals_from_str(test_case["b"])
-        df_expected_a_diff_b = intervals_from_str(test_case["a_diff_b"])
-        assert_df_interval_set_equality(df_expected_a_diff_b, operation(df_a, df_b))
+        self.check_operation(operation, test_case)
 
     @pytest.mark.parametrize(
         "test_case",
@@ -121,10 +137,7 @@ class TestIntervalsDifference:
     def test_it_returns_unmodified_inputs_when_args_dont_overlap(
         self, test_case, operation
     ):
-        df_a = intervals_from_str(test_case["a"])
-        df_b = intervals_from_str(test_case["b"])
-        df_expected_a_diff_b = intervals_from_str(test_case["a_diff_b"])
-        assert_df_interval_set_equality(df_expected_a_diff_b, operation(df_a, df_b))
+        self.check_operation(operation, test_case)
 
     @pytest.mark.parametrize(
         "test_case",
@@ -149,16 +162,13 @@ class TestIntervalsDifference:
             #         "  (----]    (----]    (----]        (-----] ",
             #     ],
             #     a_diff_b=[
-            #         "            |              |     |          ",
+            #         "            |                    |          ",
             #     ],
             # ),
         ],
     )
     def test_it_accepts_zero_duration_inputs(self, test_case, operation):
-        df_a = intervals_from_str(test_case["a"])
-        df_b = intervals_from_str(test_case["b"])
-        df_expected_a_diff_b = intervals_from_str(test_case["a_diff_b"])
-        assert_df_interval_set_equality(df_expected_a_diff_b, operation(df_a, df_b))
+        self.check_operation(operation, test_case)
 
     @pytest.mark.parametrize(
         "test_case",
@@ -210,7 +220,4 @@ class TestIntervalsDifference:
         ],
     )
     def test_it_drops_totally_overlapped_intervals(self, test_case, operation):
-        df_a = intervals_from_str(test_case["a"])
-        df_b = intervals_from_str(test_case["b"])
-        df_expected_a_diff_b = intervals_from_str(test_case["a_diff_b"])
-        assert_df_interval_set_equality(df_expected_a_diff_b, operation(df_a, df_b))
+        self.check_operation(operation, test_case)
