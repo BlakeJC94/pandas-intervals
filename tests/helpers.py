@@ -296,12 +296,11 @@ def complement_basic(
 def difference_basic(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
-    aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
     if len(df_a) == 0 or len(df_b) == 0:
         return df_a
 
-    df_a = combine_basic(df_a, aggregations=aggregations).sort_values("start")
+    df_a = df_a.sort_values("start")
     df_b = combine_basic(df_b).sort_values("start")
     intervals_a = df_to_list(df_a)
     intervals_b = df_to_list(df_b)
