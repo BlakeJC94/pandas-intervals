@@ -3,6 +3,7 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
+
 def _get_mask_no_ref_overlap(df_ref, df):
     ref_starts = np.sort(df_ref["start"].values)
     ref_ends = np.sort(df_ref["end"].values)
@@ -18,6 +19,7 @@ def _get_mask_no_ref_overlap(df_ref, df):
     # interval has no overlapping intervals in the reference set
     mask_no_overlap_ref = start_insert_idxs == end_insert_idxs
     return mask_no_overlap_ref
+
 
 def intervals_intersection(
     df_a: pd.DataFrame,

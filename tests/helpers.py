@@ -7,6 +7,8 @@ from itertools import product
 import pandas as pd
 import numpy as np
 
+from pandas_intervals.vis import plot_interval_groups as plt
+
 
 def assert_df_interval_set_equality(df_expected: pd.DataFrame, df_output: pd.DataFrame):
     df_expected = df_expected.astype(dict(start=float, end=float))
@@ -152,6 +154,19 @@ def random_intervals(
     return pd.DataFrame(data, columns=["start", "end", *[k for k, _ in random_fields]])
 
 
+def _is_overlapping(a, b) -> bool:
+    overlap = False
+    start_a, end_a = a
+    start_b, end_b = b
+    if (
+        (start_a < start_b < end_a)
+        or (start_a < end_b < end_a)
+        or (start_b < start_a < end_b)
+        or (start_b < end_a < end_b)
+    ):
+        overlap = True
+    return overlap
+
 def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
     intervals_a = df_to_list(df_a)
 
@@ -164,6 +179,8 @@ def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
                 or (start_a < end_b < end_a)
                 or (start_b < start_a < end_b)
                 or (start_b < end_a < end_b)
+                # or (start_b == end_b == end_a)
+                # or (start_a == end_a == end_b)
             ):
                 overlap = True
                 break
@@ -285,7 +302,7 @@ def difference_basic(
         return df_a
 
     df_a = combine_basic(df_a, aggregations=aggregations).sort_values("start")
-    df_b = combine_basic(df_b, aggregations=aggregations).sort_values("start")
+    df_b = combine_basic(df_b).sort_values("start")
     intervals_a = df_to_list(df_a)
     intervals_b = df_to_list(df_b)
 
