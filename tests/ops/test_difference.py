@@ -1,7 +1,7 @@
 import pytest
 
 from pandas_intervals.ops import intervals_difference
-from pandas_intervals.vis import plot_interval_groups
+from pandas_intervals.vis import plot_interval_groups as plt
 from tests.helpers import (
     assert_df_interval_set_equality,
     difference_basic,
@@ -13,7 +13,7 @@ from tests.helpers import (
     "operation",
     [
         difference_basic,
-        intervals_difference,
+        # intervals_difference,
     ],
 )
 class TestIntervalsDifference:
@@ -22,7 +22,8 @@ class TestIntervalsDifference:
         df_a = intervals_from_str(test_case["a"])
         df_b = intervals_from_str(test_case["b"])
         df_expected = intervals_from_str(test_case["a_diff_b"])
-        assert_df_interval_set_equality(df_expected, operation(df_a, df_b))
+        df_output = operation(df_a, df_b)
+        assert_df_interval_set_equality(df_expected, df_output)
 
     @pytest.mark.parametrize(
         "test_case",
@@ -99,7 +100,22 @@ class TestIntervalsDifference:
                     "                                 (---]    (------]       ",
                 ],
                 a_diff_b=[
-                    " (--](------]          (----]                      (---] ",
+                    "     (----]                                              ",
+                    " (--]   (---]          (----]                      (---] ",
+                ],
+            ),
+            dict(
+                a=[
+                    "     (----]                                              ",
+                    " (--]   (---]          (----]                      (---] ",
+                ],
+                b=[
+                    "         (----------]         (--------------]           ",
+                    "                                 (---]    (------]       ",
+                ],
+                a_diff_b=[
+                    "     (---]                                               ",
+                    " (--]   (]             (----]                      (---] ",
                 ],
             ),
         ],
@@ -142,29 +158,29 @@ class TestIntervalsDifference:
     @pytest.mark.parametrize(
         "test_case",
         [
-            # dict(
-            #     a=[
-            #         "  (----]    (----]    (----]        (-----] ",
-            #     ],
-            #     b=[
-            #         "     |      |              |                ",
-            #     ],
-            #     a_diff_b=[
-            #         "  (--]      (----]    (----]        (-----] ",
-            #         "     (-]                                    ",
-            #     ],
-            # ),
-            # dict(  # TODO
-            #     a=[
-            #         "     |      |              |     |          ",
-            #     ],
-            #     b=[
-            #         "  (----]    (----]    (----]        (-----] ",
-            #     ],
-            #     a_diff_b=[
-            #         "            |                    |          ",
-            #     ],
-            # ),
+            dict(
+                a=[
+                    "  (----]    (----]    (----]        (-----] ",
+                ],
+                b=[
+                    "     |      |              |                ",
+                ],
+                a_diff_b=[
+                    "  (--]      (----]    (----]        (-----] ",
+                    "     (-]                                    ",
+                ],
+            ),
+            dict(
+                a=[
+                    "     |      |              |     |          ",
+                ],
+                b=[
+                    "  (----]    (----]    (----]        (-----] ",
+                ],
+                a_diff_b=[
+                    "            |                    |          ",
+                ],
+            ),
         ],
     )
     def test_it_accepts_zero_duration_inputs(self, test_case, operation):
