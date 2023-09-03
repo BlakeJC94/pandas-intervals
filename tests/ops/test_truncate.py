@@ -1,10 +1,10 @@
 import pytest
 
-from pandas_intervals.ops import intervals_difference
+from pandas_intervals.ops import intervals_truncate
 from pandas_intervals.vis import plot_interval_groups as plt
 from tests.helpers import (
     assert_df_interval_set_equality,
-    difference_basic,
+    truncate_basic,
     intervals_from_str,
 )
 
@@ -12,8 +12,8 @@ from tests.helpers import (
 @pytest.mark.parametrize(
     "operation",
     [
-        difference_basic,
-        intervals_difference,
+        truncate_basic,
+        intervals_truncate,
     ],
 )
 class TestIntervalsDifference:

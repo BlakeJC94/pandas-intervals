@@ -293,7 +293,7 @@ def complement_basic(
     return pd.DataFrame(results, columns=df_a.columns)
 
 
-def difference_basic(
+def truncate_basic(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ):

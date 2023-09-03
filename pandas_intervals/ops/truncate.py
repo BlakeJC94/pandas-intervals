@@ -28,7 +28,7 @@ def bfill_step(arr, increase: bool = False):
     return ffill_step(arr[::-1], increase)[::-1]
 
 
-def intervals_difference(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+def intervals_truncate(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     if len(df_a) == 0 or len(df_b) == 0:
         return df_a
 

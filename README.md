@@ -75,7 +75,7 @@ combined = df_a.ivl.combine(df_b)
 
 padded = df_a.ivl.pad(10)  # Optional kwargs: `left_pad`, `right_pad`
 
-diff = df_a.ivl.diff(df_b)
+trunc = df_a.ivl.truncate(df_b)
 
 complement = df_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
 

@@ -16,7 +16,7 @@ from tests.helpers import (
     union_basic,
     intersection_basic,
     combine_basic,
-    difference_basic,
+    truncate_basic,
     intervals_from_str,
 )
 from pandas_intervals.vis import plot_interval_groups
@@ -229,23 +229,23 @@ class TestIntervalsAccessor:
             expected_combine_a,
         )
 
-    def test_intervals_difference(self):
+    def test_intervals_truncate(self):
         df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
         df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
-        df_a_diff_b = df_a.ivl.diff(df_b)
-        df_b_diff_a = df_b.ivl.diff(df_a)
+        df_a_trunc_b = df_a.ivl.truncate(df_b)
+        df_b_trunc_a = df_b.ivl.truncate(df_a)
 
-        expected_a_diff_b = difference_basic(df_a, df_b)
-        expected_b_diff_a = difference_basic(df_b, df_a)
+        expected_a_trunc_b = truncate_basic(df_a, df_b)
+        expected_b_trunc_a = truncate_basic(df_b, df_a)
 
         assert_df_interval_set_equality(
-            df_a_diff_b,
-            expected_a_diff_b,
+            df_a_trunc_b,
+            expected_a_trunc_b,
         )
         assert_df_interval_set_equality(
-            df_b_diff_a,
-            expected_b_diff_a,
+            df_b_trunc_a,
+            expected_b_trunc_a,
         )
 
     def test_intervals_nearest(self):

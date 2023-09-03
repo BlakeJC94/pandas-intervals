@@ -15,7 +15,7 @@ from .ops import (
     intervals_intersection,
     intervals_complement,
     intervals_combine,
-    intervals_difference,
+    intervals_truncate,
     intervals_nearest,
 )
 from .vis import plot_intervals
@@ -279,9 +279,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             [self.union(*dfs)],
         )
 
-    def diff(self, df: pd.DataFrame):
+    def truncate(self, df: pd.DataFrame):
         return self.apply_to_groups(
-            intervals_difference,
+            intervals_truncate,
             [self.df, self.format(df)],
         )
 
