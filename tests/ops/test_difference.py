@@ -13,7 +13,7 @@ from tests.helpers import (
     "operation",
     [
         difference_basic,
-        # intervals_difference,
+        intervals_difference,
     ],
 )
 class TestIntervalsDifference:
