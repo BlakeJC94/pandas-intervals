@@ -201,15 +201,6 @@ def non_overlap_basic(df_a: pd.DataFrame) -> pd.DataFrame:
     return df_a.loc[~_overlap_mask_basic(df_a)]
 
 
-def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-    cols = df_a.columns
-    intervals_a = df_to_set(df_a)
-    intervals_b = df_to_set(df_b)
-
-    result = intervals_a.union(intervals_b)
-    return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
-
-
 def intersection_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     cols = df_a.columns
     intervals_a = df_to_list(df_a)

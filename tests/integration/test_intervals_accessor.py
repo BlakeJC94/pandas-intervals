@@ -13,13 +13,21 @@ from tests.helpers import (
     random_intervals,
     overlap_basic,
     non_overlap_basic,
-    union_basic,
     intersection_basic,
     combine_basic,
     truncate_basic,
-    intervals_from_str,
+    df_to_set,
 )
 from pandas_intervals.vis import plot_interval_groups
+
+
+def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+    cols = df_a.columns
+    intervals_a = df_to_set(df_a)
+    intervals_b = df_to_set(df_b)
+
+    result = intervals_a.union(intervals_b)
+    return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
 
 
 @pytest.fixture

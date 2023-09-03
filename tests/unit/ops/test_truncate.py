@@ -16,7 +16,7 @@ from tests.helpers import (
         intervals_truncate,
     ],
 )
-class TestIntervalsDifference:
+class TestIntervalsTruncate:
     @staticmethod
     def check_operation(operation, test_case):
         df_a = intervals_from_str(test_case["a"])
