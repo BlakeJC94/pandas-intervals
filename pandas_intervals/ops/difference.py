@@ -107,29 +107,43 @@ def bfill(arr):
 
 
 def ffill_step(arr: np.ndarray, increase=True) -> np.ndarray:
-    axis = 0
     _mask = np.isnan(arr)
-    _idx = np.where(~_mask, np.arange(_mask.shape[axis]), 0)
-    np.maximum.accumulate(_idx, axis=axis, out=_idx)
-    floob = np.concatenate(
-        [[0], (np.cumsum(_idx[1:] == _idx[:-1])) * (_idx[1:] == _idx[:-1])]
-    )
-    return arr[_idx] + (2 * increase - 1) * floob
+    _idx = np.where(~_mask, np.arange(len(_mask)), 0)
+    np.maximum.accumulate(_idx, axis=0, out=_idx)
+    return arr[_idx] + (2 * increase - 1) * (np.arange(len(arr)) - _idx)
 
 
 def bfill_step(arr, increase=False):
     return ffill_step(arr[::-1], increase)[::-1]
 
 
+# TODO Drop points in B that match start/ends in A (no effect)
 def intervals_difference(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+    if len(df_a) == 0 or len(df_b) == 0:
+        return df_a
+
     df_b = df_b[["start", "end"]]
     df_b = intervals_combine(df_b)
+    _mask = (
+        ((df_b['end'] - df_b['start']) == 0)
+        & (
+            df_b['start'].isin(df_a['start'])
+            | df_b['start'].isin(df_a['end'])
+        )
+    )
+    df_b = df_b[~_mask]
     df_b = df_b.sort_values("start")
+
+    if len(df_b) == 0:
+        return df_a
 
     # Filter out intervals in A that don't overlap with B
     _mask = _get_mask_no_ref_overlap(df_b, df_a)
     df_a_no_overlap = df_a[_mask]
     df_a = df_a[~_mask]
+
+    if len(df_a) == 0:
+        return df_a_no_overlap
 
     starts_b, ends_b = df_b["start"].to_numpy(), df_b["end"].to_numpy()  # SORTED
     starts_a, ends_a = df_a["start"].to_numpy(), df_a["end"].to_numpy()
@@ -138,8 +152,8 @@ def intervals_difference(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame
     depth_ends_a = np.searchsorted(starts_b, ends_a) - np.searchsorted(starts_b, starts_a)
     depth_starts_a = np.searchsorted(ends_b, ends_a) - np.searchsorted(ends_b, starts_a)
     # Find nearest index
-    idxs_starts_b_before_ends_a = np.searchsorted(starts_b, ends_a) - 1  # TODO ffill and decrease
-    idxs_ends_b_after_starts_a = np.searchsorted(ends_b, starts_a)   # TODO ffill and increase
+    idxs_starts_b_before_ends_a = np.searchsorted(starts_b, ends_a) - 1
+    idxs_ends_b_after_starts_a = np.searchsorted(ends_b, starts_a)
 
     if max(depth_ends_a) == 0:
         ends_a_to_starts_b = np.zeros((0, 2))
