@@ -5,9 +5,12 @@ import pandas as pd
 
 from .combine import intervals_combine
 from .intersection import _get_mask_no_ref_overlap
+from pandas_intervals.vis import plot_interval_groups as plt
 
 
-def _points_from_intervals(interval_groups: List[np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
+def _points_from_intervals(
+    interval_groups: List[np.ndarray],
+) -> Tuple[np.ndarray, np.ndarray]:
     n_interval_groups = len(interval_groups)
     interval_points, interval_indices = [], []
     for i, intervals in enumerate(interval_groups):
@@ -55,7 +58,7 @@ def _atomize_intervals(
 
 
 # TODO Find a way to remove assumption for flat A
-def intervals_difference(
+def _intervals_difference(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
     aggregations: Optional[List[str]] = None,
@@ -117,176 +120,81 @@ def ffill_step(arr: np.ndarray, increase=True) -> np.ndarray:
 def bfill_step(arr, increase=False):
     return ffill_step(arr[::-1], increase)[::-1]
 
-def intervals_difference_v2(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+
+def intervals_difference(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     df_b = df_b[["start", "end"]]
     df_b = intervals_combine(df_b)
-
-    # TODO Filter out points in A and handle separately
+    df_b = df_b.sort_values("start")
 
     # Filter out intervals in A that don't overlap with B
     _mask = _get_mask_no_ref_overlap(df_b, df_a)
-    df_a_no_overlap = df_a[_mask]  # TODO Join with results at end
+    df_a_no_overlap = df_a[_mask]
     df_a = df_a[~_mask]
 
-    ## Get the indices and depth of points of A
-    # Split out starts and ends, append interval index column
-    # Append +1 col to the starts and -1 col to the ends
-    n_rows_a = len(df_a)
-    idxs_intervals = np.arange(n_rows_a)
-    starts_a = np.stack(
-        [
-            idxs_intervals,
-            df_a["start"].to_numpy(),
-            np.ones(n_rows_a),
-        ],
-        axis=-1,
-    )
-    starts_a = starts_a[np.argsort(starts_a[:, 1])]
-    ends_a = np.stack(
-        [
-            idxs_intervals,
-            df_a["end"].to_numpy(),
-            -np.ones(n_rows_a),
-        ],
-        axis=-1,
-    )
-    ends_a = ends_a[np.argsort(ends_a[:, 1])]
+    starts_b, ends_b = df_b["start"].to_numpy(), df_b["end"].to_numpy()  # SORTED
+    starts_a, ends_a = df_a["start"].to_numpy(), df_a["end"].to_numpy()
 
-    # Sort points of A
-    points_a = np.concatenate([starts_a, ends_a], axis=0)
-    idxs_times_sort = np.lexsort((points_a[:, 2], points_a[:, 1]))
-    points_a = points_a[idxs_times_sort]
+    # Get depth
+    depth_ends_a = np.searchsorted(starts_b, ends_a) - np.searchsorted(starts_b, starts_a)
+    depth_starts_a = np.searchsorted(ends_b, ends_a) - np.searchsorted(ends_b, starts_a)
+    # Find nearest index
+    idxs_starts_b_before_ends_a = np.searchsorted(starts_b, ends_a) - 1  # TODO ffill and decrease
+    idxs_ends_b_after_starts_a = np.searchsorted(ends_b, starts_a)   # TODO ffill and increase
 
-    # Calculate depth sequences of A
-    depth_a_left = np.cumsum(points_a[:, 2])
-    depth_a_right = -np.cumsum(points_a[::-1, 2])[::-1]
-
-    ## Find the starts_a that need to be copied to ends_b
-    # Get the indices of starts_a where ends_b come after
-    ends_b = df_b["end"].to_numpy()
-    idxs_starts_a_left_of_ends_b = (
-        np.searchsorted(starts_a[:, 1], ends_b) - 1
-    )  # ~ ends_b
-    idxs_points_a_left_of_ends_b = (
-        np.searchsorted(points_a[:, 1], ends_b) - 1
-    )  # ~ ends_b
-    # Filter out ends_b that occur left of A
-    _mask = (idxs_starts_a_left_of_ends_b > -1) & (idxs_points_a_left_of_ends_b > -1)
-    idxs_starts_a_left_of_ends_b = idxs_starts_a_left_of_ends_b[_mask]
-    idxs_points_a_left_of_ends_b = idxs_points_a_left_of_ends_b[_mask]
-    ends_b = ends_b[_mask]
-    # Get the depth at these points
-    depth_ends_b = depth_a_left[idxs_points_a_left_of_ends_b]  # ~ ends_b
-    # Drop ends_b with zero depth
-    _mask = depth_ends_b > 0
-    ends_b = ends_b[_mask]
-    depth_ends_b = depth_ends_b[_mask]
-    idxs_starts_a_left_of_ends_b = idxs_starts_a_left_of_ends_b[_mask]
-
-    ## Copy starts_a to ends_b
-    if len(ends_b) == 0:
-        full_starts_a_left_of_ends_b = np.zeros((0, 3))
+    if max(depth_ends_a) == 0:
+        ends_a_to_starts_b = np.zeros((0, 2))
     else:
-        # Initialise sequence of start_a points that are copied to ends_b
-        _shape = (
-            np.sum(depth_ends_b).astype(int),
-            2,
-        )  # ~ (starts_a indices, ends_b times)
-        full_starts_a_left_of_ends_b = np.full(_shape, np.nan)
-        # Backfill ends_b times column
-        _idxs = np.cumsum(depth_ends_b).astype(int) - 1
-        full_starts_a_left_of_ends_b[_idxs, 0] = idxs_starts_a_left_of_ends_b
-        full_starts_a_left_of_ends_b[_idxs, 1] = ends_b
-        full_starts_a_left_of_ends_b[:, 1] = bfill(full_starts_a_left_of_ends_b[:, 1])
-        # Backfill and decrease previous starts_a indices
-        full_starts_a_left_of_ends_b[:, 0] = bfill_step(
-            full_starts_a_left_of_ends_b[:, 0],
-            increase=False,
-        )
-        # Assign indices
-        _idxs = full_starts_a_left_of_ends_b[:, 0].astype(int)
-        full_starts_a_left_of_ends_b[:, 0] = starts_a[_idxs, 0]
-        full_starts_a_left_of_ends_b = np.concatenate(
-            [
-                full_starts_a_left_of_ends_b,
-                np.ones((len(full_starts_a_left_of_ends_b), 1)),
-            ],
-            axis=1,
-        )
+        _shape = ( np.sum(depth_ends_a).astype(int), 2,)
+        ends_a_to_starts_b = np.full(_shape, np.nan)  # cols: idxs_ends_a, idxs_starts_b
+        _idxs = np.cumsum(depth_ends_a[depth_ends_a>0]) - 1
+        ends_a_to_starts_b[_idxs, 0] = np.arange(len(depth_ends_a))[depth_ends_a.nonzero()[0]]
+        ends_a_to_starts_b[:, 0] = bfill(ends_a_to_starts_b[:, 0])
+        ends_a_to_starts_b[_idxs, 1] = idxs_starts_b_before_ends_a[depth_ends_a.nonzero()[0]]
+        ends_a_to_starts_b[:, 1] = bfill_step(ends_a_to_starts_b[:, 1])
+        # Link col1 with starts_b (location)
+        ends_a_to_starts_b[:, 1] = starts_b[ends_a_to_starts_b[:, 1].astype(int)]
 
-    ## Find the ends_a that need to be copied to starts_b
-    # Get the indices of ends_a where starts_b come after
-    starts_b = df_b["start"].to_numpy()
-    idxs_ends_a_right_of_starts_b = np.searchsorted(
-        ends_a[:, 1], starts_b
-    )  # ~ starts_b
-    idxs_points_a_right_of_starts_b = np.searchsorted(
-        points_a[:, 1], starts_b
-    )  # ~ starts_b
-    # Filter out starts_b that occur right of A
-    _mask = (idxs_ends_a_right_of_starts_b < len(ends_a) - 1) & (
-        idxs_points_a_right_of_starts_b < len(points_a) - 1
-    )
-    idxs_ends_a_right_of_starts_b = idxs_ends_a_right_of_starts_b[_mask]
-    idxs_points_a_right_of_starts_b = idxs_points_a_right_of_starts_b[_mask]
-    starts_b = starts_b[_mask]
-    # Get the depth at these points
-    depth_starts_b = depth_a_right[idxs_points_a_right_of_starts_b]  # ~ starts_b
-    # Drop starts_b with zero depth
-    _mask = depth_starts_b > 0
-    starts_b = starts_b[_mask]
-    depth_starts_b = depth_starts_b[_mask]
-    idxs_ends_a_right_of_starts_b = idxs_ends_a_right_of_starts_b[_mask]
-
-    ## Copy ends_a to starts_b
-    if len(ends_b) == 0:
-        full_ends_a_right_of_starts_b = np.zeros((0, 3))
+    if max(depth_starts_a) == 0:
+        starts_a_to_ends_b = np.zeros((0, 2))
     else:
-        # Initialise sequence of start_a points that are copied to ends_b
-        _shape = (
-            np.sum(depth_starts_b).astype(int),
-            2,
-        )  # ~ (starts_a indices, ends_b times)
-        full_ends_a_right_of_starts_b = np.full(_shape, np.nan)
-        # Backfill ends_b times column
-        _idxs = np.cumsum(depth_starts_b).astype(int) - 1
-        full_ends_a_right_of_starts_b[_idxs, 0] = idxs_ends_a_right_of_starts_b
-        full_ends_a_right_of_starts_b[_idxs, 1] = starts_b  # TODO Verify bfill ops here
-        full_ends_a_right_of_starts_b[:, 1] = bfill(full_ends_a_right_of_starts_b[:, 1])
-        # Backfill and decrease previous starts_a indices
-        full_ends_a_right_of_starts_b[:, 0] = bfill_step(
-            full_ends_a_right_of_starts_b[:, 0],
-            increase=True,
-        )
-        # Assign indices
-        _idxs = full_ends_a_right_of_starts_b[:, 0].astype(int)
-        full_ends_a_right_of_starts_b[:, 0] = ends_a[_idxs, 0]
-        full_ends_a_right_of_starts_b = np.concatenate(
-            [
-                full_ends_a_right_of_starts_b,
-                -1 * np.ones((len(full_ends_a_right_of_starts_b), 1)),
-            ],
-            axis=1,
-        )
+        _shape = ( np.sum(depth_starts_a).astype(int), 2,)
+        starts_a_to_ends_b = np.full(_shape, np.nan)  # cols: idxs_starts_a, idxs_ends_b
+        _idxs = np.cumsum(depth_starts_a[depth_starts_a>0]) - 1
+        starts_a_to_ends_b[_idxs, 0] = np.arange(len(depth_starts_a))[depth_starts_a.nonzero()[0]]
+        starts_a_to_ends_b[:, 0] = bfill(starts_a_to_ends_b[:, 0])
+        starts_a_to_ends_b[_idxs, 1] = idxs_ends_b_after_starts_a[depth_starts_a.nonzero()[0]]
+        starts_a_to_ends_b[:, 1] = bfill_step(starts_a_to_ends_b[:, 1], increase=True)  # TODO verify increase or decrease
+        # Link col1 with ends_b (location)
+        starts_a_to_ends_b[:, 1] = ends_b[starts_a_to_ends_b[:, 1].astype(int)]
+
 
     ## Drop starts_a/ends_a that are overlapped by B
-    starts_b = np.sort(df_b["start"].to_numpy())
-    ends_b = np.sort(df_b["end"].to_numpy())
     # if these indices are equal, then these points don't overlap into a B interval
-    mask_starts_a_non_overlap_b = np.searchsorted(
-        starts_b, starts_a[:, 1]
-    ) - 1 != np.searchsorted(ends_b, starts_a[:, 1])
-    mask_ends_a_non_overlap_b = np.searchsorted(
-        starts_b, ends_a[:, 1]
-    ) - 1 != np.searchsorted(ends_b, ends_a[:, 1])
+    mask_starts_a_non_overlap_b = np.searchsorted(starts_b, starts_a) - 1 != np.searchsorted(ends_b, starts_a)
+    mask_ends_a_non_overlap_b = np.searchsorted(starts_b, ends_a) - 1 != np.searchsorted(ends_b, ends_a)
 
     ## Construct resulting intervals from points
+    n_rows_a = len(df_a)
+    starts_a = np.stack(
+        [
+            np.arange(n_rows_a),
+            starts_a,
+        ],
+        axis=-1,
+    )
+    ends_a = np.stack(
+        [
+            np.arange(n_rows_a),
+            ends_a,
+        ],
+        axis=-1,
+    )
     points_result = np.concatenate(
         [
             starts_a[mask_starts_a_non_overlap_b],
             ends_a[mask_ends_a_non_overlap_b],
-            full_ends_a_right_of_starts_b,
-            full_starts_a_left_of_ends_b,
+            ends_a_to_starts_b,
+            starts_a_to_ends_b,
         ],
         axis=0,
     )
