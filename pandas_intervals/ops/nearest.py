@@ -1,7 +1,11 @@
+import logging
+
 import numpy as np
 import pandas as pd
 
 from .intersection import _get_mask_no_ref_overlap
+
+logger = logging.getLogger(__name__)
 
 
 def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
@@ -15,6 +19,13 @@ def intervals_nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     Returns:
         DataFrame with column `"min_dist"` and index equal to index of A.
     """
+    if len(df_a) == 0 or len(df_b) == 0:
+        logger.warning(f"Recieved empty intervals DataFrame.")
+        return pd.DataFrame(
+            {"min_dist": np.full((len(df_a)), np.inf)},
+            index=df_a.index,
+        )
+
     (starts_a, ends_a) = df_a[["start", "end"]].to_numpy().T
     (starts_b, ends_b) = df_b[["start", "end"]].to_numpy().T
 
