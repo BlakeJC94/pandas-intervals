@@ -1,11 +1,8 @@
-from typing import List, Optional, Tuple
-
 import numpy as np
 import pandas as pd
 
 from .combine import intervals_combine
 from .intersection import _get_mask_no_ref_overlap
-from pandas_intervals.vis import plot_interval_groups as plt
 
 
 def ffill(arr: np.ndarray) -> np.ndarray:
@@ -20,18 +17,17 @@ def bfill(arr):
     return ffill(arr[::-1])[::-1]
 
 
-def ffill_step(arr: np.ndarray, increase=True) -> np.ndarray:
+def ffill_step(arr: np.ndarray, increase: bool = True) -> np.ndarray:
     _mask = np.isnan(arr)
     _idx = np.where(~_mask, np.arange(len(_mask)), 0)
     np.maximum.accumulate(_idx, axis=0, out=_idx)
     return arr[_idx] + (2 * increase - 1) * (np.arange(len(arr)) - _idx)
 
 
-def bfill_step(arr, increase=False):
+def bfill_step(arr, increase: bool = False):
     return ffill_step(arr[::-1], increase)[::-1]
 
 
-# TODO Drop points in B that match start/ends in A (no effect)
 def intervals_difference(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     if len(df_a) == 0 or len(df_b) == 0:
         return df_a
@@ -156,7 +152,4 @@ def intervals_difference(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame
         dict(start=starts_result, end=ends_result), index=df_a.index[idxs_a]
     )
     df_result = pd.concat([df_result, df_a.iloc[idxs_a, 2:]], axis=1)
-    # Re-join points in A from start of func
-    df_result = pd.concat([df_result, df_a_no_overlap])
-
-    return df_result
+    return pd.concat([df_result, df_a_no_overlap])
