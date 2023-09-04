@@ -181,6 +181,18 @@ class TestIntervalsTruncate:
                     "            |                    |          ",
                 ],
             ),
+            dict(
+                a=[
+                    "  (----]    (--------------]        (-----] ",
+                ],
+                b=[
+                    "               (-]      (------]            ",
+                    "                 (------]                   ",
+                ],
+                a_diff_b=[
+                    "  (----]    (--] |      |           (-----] ",
+                ],
+            ),
         ],
     )
     def test_it_accepts_zero_duration_inputs(self, test_case, operation):

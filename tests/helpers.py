@@ -308,36 +308,36 @@ def truncate_basic(
             if end_b < start_a:
                 continue
 
-            # A : (----]
-            # B :          (----]
+            # A :          (----]
+            # B :                   (----]
             # If `b` is strictly after the selected label, go to next interval in `A`
             if end_a < start_b:
                 break
 
-            # A :     (----]
-            # B :  (----------]
+            # A :          (----]
+            # B :       (----------]
             # If `b` contains `a`, discard `a` and go to next interval in `A`
             if start_b < start_a and end_a <= end_b:
                 keep_label = False
                 break
 
-            # A :       (------)
-            # B :   (------)
+            # A :          (------]
+            # B :      (------]
             # If `b` overlaps start of `a`, clip `a` start and check next interval in `B`
-            if start_b <= start_a and end_b <= end_a:
+            if start_b < start_a and end_b <= end_a:
                 start_a = end_b
                 continue
 
-            # A :   (-----------...
-            # B :      (----)
+            # A :         (-----------...
+            # B :            (----]
             # If `b` is contained in `a`, create interval, clip `a`, and check next interval in `b`
             if start_a <= start_b and end_b < end_a:
                 results.append((start_a, start_b, *metadata))
                 start_a = end_b
                 continue
 
-            # A :   (------)
-            # B :       (------)
+            # A :            (------]
+            # B :                (------]
             # If `b` overlaps end of `a`, clip end of `a` and go to next interval in `A`
             if start_a <= start_b and end_a <= end_b:
                 end_a = start_b
