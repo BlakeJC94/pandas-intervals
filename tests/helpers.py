@@ -349,7 +349,14 @@ def truncate_basic(
         return df_a
 
     df_a = df_a.sort_values("start")
-    df_b = combine_basic(df_b).sort_values("start")
+    df_b = combine_basic(df_b[['start', 'end']]).sort_values("start")
+
+    # Remove zero duration df_b that are equal to start/end of df_a (no effect)
+    _mask = ((df_b["end"] - df_b["start"]) == 0) & (
+        df_b["start"].isin(df_a["start"]) | df_b["start"].isin(df_a["end"])
+    )
+    df_b = df_b[~_mask]
+
     intervals_a = df_to_list(df_a)
     intervals_b = df_to_list(df_b)
 
