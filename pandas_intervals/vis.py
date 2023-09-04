@@ -31,17 +31,30 @@ def plot_intervals(
 
 
 def plot_interval_groups(
-    dfs: Union[Dict[str, pd.DataFrame], List[pd.DataFrame]],
+    dfs: Dict[str, pd.DataFrame],
     colors: Optional[List[str]] = None,
+    **layout_kwargs,
+) -> Figure:
+    names, values = [], []
+    for k, v in dfs.items():
+        names.append(k)
+        values.append(v)
+    return _plot_interval_groups(*values, colors, names, **layout_kwargs)
+
+def _plot_interval_groups(
+    *dfs,
+    colors: Optional[List[str]] = None,
+    names: Optional[List[str]] = None,
     **layout_kwargs,
 ) -> Figure:
     if not colors:
         colors = ["red", "green", "blue"]
 
-    if isinstance(dfs, list):
-        dfs = [("", df) for df in dfs]
-    elif isinstance(dfs, dict):
-        dfs = [(name, df) for name, df in dfs.items()]
+    if not names:
+        names = ["" for _ in range(len(dfs))]
+
+    assert len(names) == len(dfs)
+    dfs = [(name, df) for name, df in zip(names, dfs)]
 
     hspan = 1.0
 

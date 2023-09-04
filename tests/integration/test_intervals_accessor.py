@@ -18,7 +18,6 @@ from tests.helpers import (
     truncate_basic,
     df_to_set,
 )
-from pandas_intervals.vis import plot_interval_groups
 
 
 def union_basic(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:

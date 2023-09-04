@@ -7,7 +7,7 @@ from itertools import product
 import pandas as pd
 import numpy as np
 
-from pandas_intervals.vis import plot_interval_groups as plt
+from pandas_intervals.vis import _plot_interval_groups as plt
 
 
 def assert_df_interval_times_equal(
@@ -61,7 +61,7 @@ def assert_df_interval_times_equal(
         ]
 
         if plot_on_error:
-            plt([*other_dfs, foo, bar])
+            plt(*other_dfs, foo, bar)
 
         raise err
 
