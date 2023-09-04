@@ -219,6 +219,25 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return results.reset_index(drop=True)
 
     # TODO Test
+    def window(
+        self,
+        left_bound: Optional[float] = None,
+        right_bound: Optional[float] = None,
+        strict: bool = False,
+    ) -> pd.DataFrame:
+        if left_bound is None:
+            left_bound = self.df['start'].min()
+        if right_bound is None:
+            left_bound = self.df['end'].max()
+
+        if not strict:
+            mask = (self.df['end'] >= left_bound) & (self.df['start'] <= right_bound)
+        else:
+            mask = (self.df['start'] >= left_bound) & (self.df['end'] <= right_bound)
+
+        return self.df.loc[mask]
+
+    # TODO Test
     def contains(self, df: pd.DataFrame) -> bool:
         df = df.drop_duplicates()
         df_all = self.union(df)
