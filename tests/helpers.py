@@ -10,6 +10,62 @@ import numpy as np
 from pandas_intervals.vis import plot_interval_groups as plt
 
 
+def assert_df_interval_times_equal(
+    df_expected: pd.DataFrame,
+    df_output: pd.DataFrame,
+    *other_dfs,
+    plot_on_error: bool = False,
+):
+    df_expected = df_expected[["start", "end"]].sort_values(["start", "end"])
+    df_output = df_output[["start", "end"]].sort_values(["start", "end"])
+
+    times_expected = df_expected.to_numpy()
+    times_output = df_output.to_numpy()
+    try:
+        assert len(times_output) == len(
+            times_expected
+        ), f"n_expected = {len(times_expected)}, n_output = {len(times_output)}"
+        assert (times_output == times_expected).all()
+    except Exception as err:
+        difflen = len(times_expected) - len(times_output)
+        times_expected = np.concatenate(
+            [
+                times_expected,
+                np.zeros((max(-difflen, 0), 2)),
+            ],
+            axis=0,
+        )
+        times_output = np.concatenate(
+            [
+                times_output,
+                np.zeros((max(difflen, 0), 2)),
+            ],
+            axis=0,
+        )
+        idx_row = np.min(np.where(times_expected != times_output)[0])
+
+        idx_start = idx_row - 2
+        win_start = min(
+            df_expected.iloc[idx_start]["start"], df_output.iloc[idx_start]["start"]
+        )
+
+        idx_end = idx_row + 3
+        win_end = max(df_expected.iloc[idx_end]["end"], df_output.iloc[idx_end]["end"])
+
+        foo = df_expected[
+            (df_expected["end"] > win_start) & (df_expected["start"] < win_end)
+        ]
+        bar = df_output[(df_output["end"] > win_start) & (df_output["start"] < win_end)]
+        other_dfs = [
+            df[(df["end"] > win_start) & (df["start"] < win_end)] for df in other_dfs
+        ]
+
+        if plot_on_error:
+            plt([*other_dfs, foo, bar])
+
+        raise err
+
+
 def assert_df_interval_set_equality(df_expected: pd.DataFrame, df_output: pd.DataFrame):
     df_expected = df_expected.astype(dict(start=float, end=float))
     df_output = df_output.astype(dict(start=float, end=float))
@@ -166,6 +222,7 @@ def _is_overlapping(a, b) -> bool:
     ):
         overlap = True
     return overlap
+
 
 def _overlap_mask_basic(df_a: pd.DataFrame) -> np.ndarray:
     intervals_a = df_to_list(df_a)
