@@ -18,7 +18,7 @@ def plot_intervals(
     colors: Optional[List[str]] = None,
     title: Optional[str] = None,
     **layout_kwargs,
-) -> go.Figure:
+) -> Figure:
     dfs = []
     for group, df in _df_groups([df], groupby_cols=groupby_cols):
         group_name = group if group is not None else ""
