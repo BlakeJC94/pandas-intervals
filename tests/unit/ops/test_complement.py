@@ -1,9 +1,9 @@
 import pytest
 
 from pandas_intervals.ops import intervals_complement
+from pandas_intervals.ops.basic import intervals_complement as complement_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
-    complement_basic,
     intervals_from_str,
 )
 

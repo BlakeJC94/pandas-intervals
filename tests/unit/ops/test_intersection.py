@@ -1,9 +1,9 @@
 import pytest
 
 from pandas_intervals.ops import intervals_intersection
+from pandas_intervals.ops.basic import intervals_intersection as intersection_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
-    intersection_basic,
     intervals_from_str,
 )
 

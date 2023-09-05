@@ -9,7 +9,8 @@ try:
 except ImportError:
     plotly = None
 
-from .ops import (
+from pandas_intervals.ops import (
+    basic,
     intervals_overlap,
     intervals_non_overlap,
     intervals_intersection,
@@ -185,6 +186,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def __init__(self, pandas_obj: Optional[pd.DataFrame] = None):
         self.df = self.format(pandas_obj)
+        self._simple = False
 
     def __call__(self):
         return self.df
@@ -199,7 +201,12 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def span(self) -> float:
         return self.df["end"].max() - self.df["start"].min()
 
-    def plot(
+    @property
+    def simple(self):
+        self._simple = True
+        return self
+
+    def plot(  # IDEA: matplotlib impl?
         self,
         groupby_cols: Optional[List[str]] = None,
         colors: Optional[List[str]] = None,
@@ -209,7 +216,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             raise ImportError("Plotting intervals requires `plotly` to be installed")
 
         groupby_cols = groupby_cols or self.groupby_cols
-        return plot_intervals(self.df, groupby_cols, **layout_kwargs)
+        return plot_intervals(self.df, groupby_cols, colors, **layout_kwargs)
 
     def sort(self) -> pd.DataFrame:
         results = sort_intervals(
@@ -226,14 +233,14 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         strict: bool = False,
     ) -> pd.DataFrame:
         if left_bound is None:
-            left_bound = self.df['start'].min()
+            left_bound = self.df["start"].min()
         if right_bound is None:
-            left_bound = self.df['end'].max()
+            left_bound = self.df["end"].max()
 
         if not strict:
-            mask = (self.df['end'] >= left_bound) & (self.df['start'] <= right_bound)
+            mask = (self.df["end"] >= left_bound) & (self.df["start"] <= right_bound)
         else:
-            mask = (self.df['start'] >= left_bound) & (self.df['end'] <= right_bound)
+            mask = (self.df["start"] >= left_bound) & (self.df["end"] <= right_bound)
 
         return self.df.loc[mask]
 
@@ -259,14 +266,16 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return self.df.loc[self.df["end"] - self.df["start"] >= 0]
 
     def overlap(self) -> pd.DataFrame:
+        operation = basic.intervals_overlap if self._simple else intervals_overlap
         return self.apply_to_groups(
-            intervals_overlap,
+            operation,
             [self.df],
         )
 
     def non_overlap(self) -> pd.DataFrame:
+        operation = basic.intervals_non_overlap if self._simple else intervals_non_overlap
         return self.apply_to_groups(
-            intervals_non_overlap,
+            operation,
             [self.df],
         )
 

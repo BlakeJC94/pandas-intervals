@@ -1,9 +1,9 @@
 import pytest
 
 from pandas_intervals.ops import intervals_combine
+from pandas_intervals.ops.basic import intervals_combine as combine_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
-    combine_basic,
     intervals_from_str,
 )
 

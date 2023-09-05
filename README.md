@@ -2,15 +2,15 @@
 Pandas extension for `DataFrame`s of intervals (AKA `spandas`).
 
 TODO:
-* [X] Build up bash DataFrame accessor
-* [X] Structure GroupBys to apply interval functions on specific groups of intervals
-* [X] Implement iterative methods for interval operations
-    * [X] Implement unit tests for iterative methods
-    * [ ] Add more edge cases to the iterative methods
-* [X] Implement plot method for accessor
-* [X] Vectorise all methods
-    * [X] Implement property-based tests
-    * [ ] Refactor tests to test specific aspects
+* [x] Build up bash DataFrame accessor
+* [x] Structure GroupBys to apply interval functions on specific groups of intervals
+* [x] Implement iterative methods for interval operations
+    * [x] Implement unit tests for iterative methods
+    * [x] Add more edge cases to the iterative methods
+* [x] Implement plot method for accessor
+* [x] Vectorise all methods
+    * [x] Implement property-based tests
+    * [x] Refactor tests to test specific aspects
 
 
 This library provides `IntervalsFrames`: a standard interface for `DataFrames` of "interval"-like objects, where each object is specified by a `start` and an `end`. `IntervalsFrames` are `DataFrame`-like, but with some extras:

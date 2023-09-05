@@ -1,9 +1,9 @@
 import pytest
 
 from pandas_intervals.ops import intervals_truncate
+from pandas_intervals.ops.basic import intervals_truncate as truncate_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
-    truncate_basic,
     intervals_from_str,
 )
 

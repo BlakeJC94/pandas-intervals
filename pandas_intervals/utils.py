@@ -63,3 +63,7 @@ def _df_groups(
                 for i in range(n_dfs)
             ]
             yield (group, result)
+
+
+def df_to_list(df: pd.DataFrame) -> List[Tuple[Any]]:
+    return list(df.itertuples(index=False, name=None))

@@ -1,10 +1,12 @@
 import pytest
 
 from pandas_intervals.ops import intervals_overlap, intervals_non_overlap
+from pandas_intervals.ops.basic import (
+    intervals_overlap as overlap_basic,
+    intervals_non_overlap as non_overlap_basic,
+)
 from tests.helpers import (
     assert_df_interval_set_equality,
-    overlap_basic,
-    non_overlap_basic,
     intervals_from_str,
 )
 

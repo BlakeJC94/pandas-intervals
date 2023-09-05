@@ -6,16 +6,10 @@ import pandas as pd
 import pytest
 
 import pandas_intervals
+from pandas_intervals.ops import basic
 from tests.helpers import (
     assert_df_interval_set_equality,
-    complement_basic,
-    nearest_basic,
     random_intervals,
-    overlap_basic,
-    non_overlap_basic,
-    intersection_basic,
-    combine_basic,
-    truncate_basic,
     df_to_set,
 )
 
@@ -58,7 +52,6 @@ def intervals_df_b():
     )
 
 
-# TODO break up this test class into smaller units for each operation
 class TestIntervalsAccessor:
     def test_format_intervals(self, intervals_df_a):
         """Test a `DataFrame` can be formatted by the IntervalsAccessor."""
@@ -148,8 +141,8 @@ class TestIntervalsAccessor:
         df_a_overlap = df_a.ivl.overlap()
         df_a_non_overlap = df_a.ivl.non_overlap()
 
-        expected_overlap = overlap_basic(df_a)
-        expected_non_overlap = non_overlap_basic(df_a)
+        expected_overlap = basic.intervals_overlap(df_a)
+        expected_non_overlap = basic.intervals_non_overlap(df_a)
 
         assert_df_interval_set_equality(
             df_a_overlap,
@@ -175,7 +168,7 @@ class TestIntervalsAccessor:
         kwargs = dict(random.sample(kwargs, k=random.randint(0, len(kwargs))))
 
         df_a_complement = df_a.ivl.complement(**kwargs)
-        expected_complement = complement_basic(df_a, **kwargs)
+        expected_complement = basic.intervals_complement(df_a, **kwargs)
 
         assert_df_interval_set_equality(
             df_a_complement,
@@ -183,7 +176,7 @@ class TestIntervalsAccessor:
         )
 
         assert_df_interval_set_equality(
-            intersection_basic(df_a_complement, df_a),
+            basic.intervals_intersection(df_a_complement, df_a),
             pd.DataFrame().ivl(),
         )
 
@@ -214,7 +207,7 @@ class TestIntervalsAccessor:
         df_a_intersection_b = df_a.ivl.intersection(df_b)
         df_b_intersection_a = df_b.ivl.intersection(df_a)
 
-        expected = intersection_basic(df_a, df_b)
+        expected = basic.intervals_intersection(df_a, df_b)
 
         assert_df_interval_set_equality(
             df_a_intersection_b,
@@ -229,7 +222,7 @@ class TestIntervalsAccessor:
     def test_intervals_combine(self):
         df_a = random_intervals(n_intervals=random.randint(0, 12)).ivl()
         df_combine_a = df_a.ivl.combine()
-        expected_combine_a = combine_basic(df_a)
+        expected_combine_a = basic.intervals_combine(df_a)
 
         assert_df_interval_set_equality(
             df_combine_a,
@@ -243,8 +236,8 @@ class TestIntervalsAccessor:
         df_a_trunc_b = df_a.ivl.truncate(df_b)
         df_b_trunc_a = df_b.ivl.truncate(df_a)
 
-        expected_a_trunc_b = truncate_basic(df_a, df_b)
-        expected_b_trunc_a = truncate_basic(df_b, df_a)
+        expected_a_trunc_b = basic.intervals_truncate(df_a, df_b)
+        expected_b_trunc_a = basic.intervals_truncate(df_b, df_a)
 
         assert_df_interval_set_equality(
             df_a_trunc_b,
@@ -260,6 +253,6 @@ class TestIntervalsAccessor:
         df_b = random_intervals(n_intervals=random.randint(0, 12)).ivl()
 
         result = df_a.ivl.nearest(df_b)
-        expected = nearest_basic(df_a, df_b)
+        expected = basic.intervals_nearest(df_a, df_b)
 
         assert result.iloc[:, 0].tolist() == expected.iloc[:, 0].tolist()

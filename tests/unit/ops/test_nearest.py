@@ -2,8 +2,8 @@ import pytest
 import pandas as pd
 
 from pandas_intervals.ops import intervals_nearest
+from pandas_intervals.ops.basic import intervals_nearest as nearest_basic
 from tests.helpers import (
-    nearest_basic,
     intervals_from_str,
 )
 
