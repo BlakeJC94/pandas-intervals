@@ -186,7 +186,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def __init__(self, pandas_obj: Optional[pd.DataFrame] = None):
         self.df = self.format(pandas_obj)
-        self._simple = False
+        self._basic = False
 
     def __call__(self):
         return self.df
@@ -202,8 +202,8 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return self.df["end"].max() - self.df["start"].min()
 
     @property
-    def simple(self):
-        self._simple = True
+    def basic(self):
+        self._basic = True
         return self
 
     def plot(  # IDEA: matplotlib impl?
@@ -266,14 +266,14 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return self.df.loc[self.df["end"] - self.df["start"] >= 0]
 
     def overlap(self) -> pd.DataFrame:
-        operation = basic.intervals_overlap if self._simple else intervals_overlap
+        operation = basic.intervals_overlap if self._basic else intervals_overlap
         return self.apply_to_groups(
             operation,
             [self.df],
         )
 
     def non_overlap(self) -> pd.DataFrame:
-        operation = basic.intervals_non_overlap if self._simple else intervals_non_overlap
+        operation = basic.intervals_non_overlap if self._basic else intervals_non_overlap
         return self.apply_to_groups(
             operation,
             [self.df],
@@ -284,8 +284,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         left_bound: Optional[float] = None,
         right_bound: Optional[float] = None,
     ):
+        operation = basic.intervals_complement if self._basic else intervals_complement
         return self.apply_to_groups(
-            intervals_complement,
+            operation,
             [self.df],
             left_bound=left_bound,
             right_bound=right_bound,
@@ -296,25 +297,29 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return pd.concat(interval_sets, axis=0).drop_duplicates()
 
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
+        operation = basic.intervals_intersection if self._basic else intervals_intersection
         return self.apply_to_groups(
-            intervals_intersection,
+            operation,
             [self.df, self.format(df)],
         )
 
     def combine(self, *dfs) -> pd.DataFrame:
+        operation = basic.intervals_combine if self._basic else intervals_combine
         return self.apply_to_groups(
-            intervals_combine,
+            operation,
             [self.union(*dfs)],
         )
 
     def truncate(self, df: pd.DataFrame):
+        operation = basic.intervals_truncate if self._basic else intervals_truncate
         return self.apply_to_groups(
-            intervals_truncate,
+            operation,
             [self.df, self.format(df)],
         )
 
     def nearest(self, df: pd.DataFrame):
+        operation = basic.intervals_nearest if self._basic else intervals_nearest
         return self.apply_to_groups(
-            intervals_nearest,
+            operation,
             [self.df, self.format(df)],
         )
