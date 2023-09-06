@@ -3,7 +3,7 @@ import pandas as pd
 from pandas_intervals.utils import df_to_list
 
 
-def intervals_nearest(
+def nearest(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ) -> pd.DataFrame:

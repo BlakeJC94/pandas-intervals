@@ -1,7 +1,7 @@
 import pytest
 
-from pandas_intervals.ops import intervals_truncate
-from pandas_intervals.ops.basic import intervals_truncate as truncate_basic
+from pandas_intervals.ops import truncate
+from pandas_intervals.ops.basic import truncate as truncate_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
     intervals_from_str,
@@ -12,7 +12,7 @@ from tests.helpers import (
     "operation",
     [
         truncate_basic,
-        intervals_truncate,
+        truncate,
     ],
 )
 class TestIntervalsTruncate:

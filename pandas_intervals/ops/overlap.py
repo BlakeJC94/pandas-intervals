@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 
 
-def intervals_overlap(df: pd.DataFrame):
+def overlap(df: pd.DataFrame):
     if df.empty:
         return df
     return df.loc[(_get_overlapping_mask(df) > 0)]
 
 
-def intervals_non_overlap(df: pd.DataFrame):
+def non_overlap(df: pd.DataFrame):
     if df.empty:
         return df
     return df.loc[~(_get_overlapping_mask(df) > 0)]

@@ -1,7 +1,7 @@
 import pytest
 
-from pandas_intervals.ops import intervals_combine
-from pandas_intervals.ops.basic import intervals_combine as combine_basic
+from pandas_intervals.ops import combine
+from pandas_intervals.ops.basic import combine as combine_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
     intervals_from_str,
@@ -12,7 +12,7 @@ from tests.helpers import (
     "operation",
     [
         combine_basic,
-        intervals_combine,
+        combine,
     ],
 )
 class TestIntervalsCombine:

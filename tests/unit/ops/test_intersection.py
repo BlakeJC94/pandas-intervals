@@ -1,14 +1,14 @@
 import pytest
 
-from pandas_intervals.ops import intervals_intersection
-from pandas_intervals.ops.basic import intervals_intersection as intersection_basic
+from pandas_intervals.ops import intersection
+from pandas_intervals.ops.basic import intersection as intersection_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
     intervals_from_str,
 )
 
 
-@pytest.mark.parametrize("operation", [intersection_basic, intervals_intersection])
+@pytest.mark.parametrize("operation", [intersection_basic, intersection])
 class TestIntervalsIntersection:
     @staticmethod
     def check_operation(operation, test_case):

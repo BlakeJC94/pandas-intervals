@@ -2,11 +2,11 @@ from typing import Union, Optional, Dict, Callable
 
 import pandas as pd
 
-from .combine import intervals_combine
+from .combine import combine
 from pandas_intervals.utils import df_to_list
 
 
-def intervals_complement(
+def complement(
     df_a: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
     left_bound: Optional[float] = None,
@@ -15,7 +15,7 @@ def intervals_complement(
     if len(df_a) == 0:
         return df_a
 
-    df_a = intervals_combine(df_a, aggregations=aggregations).sort_values("start")
+    df_a = combine(df_a, aggregations=aggregations).sort_values("start")
     intervals = df_to_list(df_a)
 
     start_first, end_first, *metadata_first = intervals[0]

@@ -1,14 +1,14 @@
 import pytest
 
-from pandas_intervals.ops import intervals_complement
-from pandas_intervals.ops.basic import intervals_complement as complement_basic
+from pandas_intervals.ops import complement
+from pandas_intervals.ops.basic import complement as complement_basic
 from tests.helpers import (
     assert_df_interval_set_equality,
     intervals_from_str,
 )
 
 
-@pytest.mark.parametrize("operation", [complement_basic, intervals_complement])
+@pytest.mark.parametrize("operation", [complement_basic, complement])
 class TestIntervalsComplement:
     @staticmethod
     def check_operation(operation, test_case):

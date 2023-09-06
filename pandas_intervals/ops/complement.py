@@ -2,10 +2,10 @@ from typing import Callable, Union, List, Dict, Optional
 
 import pandas as pd
 
-from .combine import intervals_combine
+from .combine import combine
 
 
-def intervals_complement(
+def complement(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
     left_bound: Optional[float] = None,
@@ -16,7 +16,7 @@ def intervals_complement(
 
     aggregations = aggregations or {"start": "min", "end": "max"}
     aggregations.update({c: "first" for c in df.columns if c not in aggregations})
-    df = intervals_combine(df, aggregations=aggregations).sort_values("start")
+    df = combine(df, aggregations=aggregations).sort_values("start")
 
     (start_first, end_first), metadata_first = df.iloc[0, :2], df.iloc[0, 2:]
     (_start_last, end_last), metadata_last = df.iloc[-1, :2], df.iloc[-1, 2:]

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from .combine import intervals_combine
+from .combine import combine
 from .intersection import _get_mask_no_ref_overlap
 
 
@@ -28,12 +28,12 @@ def bfill_step(arr, increase: bool = False):
     return ffill_step(arr[::-1], increase)[::-1]
 
 
-def intervals_truncate(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+def truncate(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     if len(df_a) == 0 or len(df_b) == 0:
         return df_a
 
     df_b = df_b[["start", "end"]]
-    df_b = intervals_combine(df_b)
+    df_b = combine(df_b)
     _mask = ((df_b["end"] - df_b["start"]) == 0) & (
         df_b["start"].isin(df_a["start"]) | df_b["start"].isin(df_a["end"])
     )

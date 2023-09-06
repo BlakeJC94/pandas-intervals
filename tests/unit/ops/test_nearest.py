@@ -1,14 +1,14 @@
 import pytest
 import pandas as pd
 
-from pandas_intervals.ops import intervals_nearest
-from pandas_intervals.ops.basic import intervals_nearest as nearest_basic
+from pandas_intervals.ops import nearest
+from pandas_intervals.ops.basic import nearest as nearest_basic
 from tests.helpers import (
     intervals_from_str,
 )
 
 
-@pytest.mark.parametrize("operation", [nearest_basic, intervals_nearest])
+@pytest.mark.parametrize("operation", [nearest_basic, nearest])
 class TestIntervalsNearest:
     @staticmethod
     def check_operation(operation, test_case):

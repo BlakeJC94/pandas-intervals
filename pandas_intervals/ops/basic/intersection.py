@@ -5,7 +5,7 @@ import pandas as pd
 from pandas_intervals.utils import df_to_list
 
 
-def intervals_intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+def intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     cols = df_a.columns
     intervals_a = df_to_list(df_a)
     intervals_b = df_to_list(df_b)

@@ -3,7 +3,7 @@ from typing import Union, Optional, Dict, Callable
 import pandas as pd
 
 
-def intervals_combine(
+def combine(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):

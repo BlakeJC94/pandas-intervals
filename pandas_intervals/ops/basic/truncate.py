@@ -1,9 +1,9 @@
 import pandas as pd
 
-from .combine import intervals_combine
+from .combine import combine
 from pandas_intervals.utils import df_to_list
 
-def intervals_truncate(
+def truncate(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ):
@@ -11,7 +11,7 @@ def intervals_truncate(
         return df_a
 
     df_a = df_a.sort_values("start")
-    df_b = intervals_combine(df_b[['start', 'end']]).sort_values("start")
+    df_b = combine(df_b[['start', 'end']]).sort_values("start")
 
     # Remove zero duration df_b that are equal to start/end of df_a (no effect)
     _mask = ((df_b["end"] - df_b["start"]) == 0) & (

@@ -1,4 +1,3 @@
-from typing import Set
 
 import numpy as np
 import pandas as pd
@@ -26,13 +25,13 @@ def _get_overlap_mask(df_a: pd.DataFrame) -> np.ndarray:
     return np.array(mask)
 
 
-def intervals_overlap(df_a: pd.DataFrame) -> pd.DataFrame:
+def overlap(df_a: pd.DataFrame) -> pd.DataFrame:
     if df_a.empty:
         return df_a
     return df_a.loc[_get_overlap_mask(df_a)]
 
 
-def intervals_non_overlap(df_a: pd.DataFrame) -> pd.DataFrame:
+def non_overlap(df_a: pd.DataFrame) -> pd.DataFrame:
     if df_a.empty:
         return df_a
     return df_a.loc[~_get_overlap_mask(df_a)]

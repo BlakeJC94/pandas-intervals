@@ -21,7 +21,7 @@ def _get_mask_no_ref_overlap(df_ref, df):
     return mask_no_overlap_ref
 
 
-def intervals_intersection(
+def intersection(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -32,7 +32,7 @@ def intervals_intersection(
     return pd.concat(results, axis=0)
 
 
-def intervals_symdiff(
+def symdiff(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
 ) -> pd.DataFrame:

@@ -5,7 +5,7 @@ import pandas as pd
 from .overlap import _get_overlapping_mask
 
 
-def intervals_combine(
+def combine(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
