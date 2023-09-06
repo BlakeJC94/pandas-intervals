@@ -23,7 +23,6 @@ from .vis import plot_intervals
 from .utils import _apply_operation_to_groups, sort_intervals
 
 
-# TODO Improve docs
 class FieldsTrait:
     """Mixin used to set the essential columns/types of a DataFrame of interval-like objects.
 

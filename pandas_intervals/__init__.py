@@ -1,1 +1,1 @@
-from .intervals_accessor import IntervalsAccessor
+from .core import IntervalsAccessor
