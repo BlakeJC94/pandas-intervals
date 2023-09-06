@@ -7,7 +7,7 @@ import pytest
 
 import pandas_intervals
 from pandas_intervals.utils import df_to_set
-from tests.helpers import (
+from tests.conftest import (
     assert_df_interval_times_equal,
     random_intervals,
 )

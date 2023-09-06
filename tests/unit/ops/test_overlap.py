@@ -5,7 +5,7 @@ from pandas_intervals.ops.basic import (
     overlap as overlap_basic,
     non_overlap as non_overlap_basic,
 )
-from tests.helpers import (
+from tests.conftest import (
     assert_df_interval_times_equal,
     intervals_from_str,
 )

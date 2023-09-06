@@ -3,7 +3,7 @@ import pandas as pd
 
 from pandas_intervals.ops import nearest
 from pandas_intervals.ops.basic import nearest as nearest_basic
-from tests.helpers import (
+from tests.conftest import (
     intervals_from_str,
 )
 

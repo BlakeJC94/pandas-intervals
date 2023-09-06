@@ -2,7 +2,7 @@ import pytest
 
 from pandas_intervals.ops import intersection
 from pandas_intervals.ops.basic import intersection as intersection_basic
-from tests.helpers import (
+from tests.conftest import (
     assert_df_interval_times_equal,
     intervals_from_str,
 )

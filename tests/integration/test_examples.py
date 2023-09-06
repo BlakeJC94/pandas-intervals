@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 
 from pandas_intervals.core import IntervalsAccessor
-from tests.helpers import random_intervals
+from tests.conftest import random_intervals
 
 
 # Test data

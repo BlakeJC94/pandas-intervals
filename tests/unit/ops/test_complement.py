@@ -2,7 +2,7 @@ import pytest
 
 from pandas_intervals.ops import complement
 from pandas_intervals.ops.basic import complement as complement_basic
-from tests.helpers import (
+from tests.conftest import (
     assert_df_interval_times_equal,
     intervals_from_str,
 )
