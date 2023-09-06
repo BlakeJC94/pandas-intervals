@@ -11,12 +11,17 @@ TODO:
 * [x] Vectorise all methods
     * [x] Implement property-based tests
     * [x] Refactor tests to test specific aspects
+* [ ] Set difference
+* [ ] Doctests
+* [ ] Acceptance tests
+* [ ] Documentation
+* [ ] Upgrade asserter
 
 
-This library provides `IntervalsFrames`: a standard interface for `DataFrames` of "interval"-like objects, where each object is specified by a `start` and an `end`. `IntervalsFrames` are `DataFrame`-like, but with some extras:
-* The columns `"start"` and `"end"` are automatically formatted as `float` types
-* The order of the columns is strictly as specified
-* Interval set operations (intersections, combinations, differences) are implemented via magic methods
+This library provides `ivl` extension: a standard interface and methods for `DataFrames` of "interval"-like objects, where each object is specified by a `start` and an `end`.
+* The columns `"start"` and `"end"` are automatically formatted as `float` types,
+* The order of the columns is strictly as specified,
+* Interval set operations (intersections, combinations, differences) can be called via the `ivl` property on any DataFrame after importing this module.
 
 The `IntervalsFrame` object is also extensible and allows adding columns with default values and specifying how columns are aggregated when combining close intervals.
 
@@ -34,9 +39,9 @@ import pandas_intervals
 
 df_a = pd.DataFrame(
     [
-        [50, 100],
-        [150, 200],
-        [300, 450],
+        (50, 100),
+        (150, 200),
+        (300, 450),
     ],
 ).ivl()
 print(df_a)
@@ -47,12 +52,12 @@ print(df_a)
 
 df_b = pd.DataFrame(
     [
-        [10, 40],
-        [80, 120],
-        [230, 280],
-        [330, 370],
-        [420, 490],
-        [510, 550],
+        (10, 40),
+        (80, 120),
+        (230, 280),
+        (330, 370),
+        (420, 490),
+        (510, 550),
     ],
 ).ivl()
 print(df_b)
@@ -120,11 +125,15 @@ We can accomplish this in a relatively small class:
 ```python
 import json
 from os import PathLike
-
-from pandas_intervals.intervals_accessor import IntervalsAccessor
-from pandas_intervals.utils import comma_join
+from typing import List
 
 import pandas as pd
+from pandas_intervals import IntervalsAccessor
+
+
+# Let's define a function to be used when aggregating results across the `notes` column
+def comma_join(x: List[str]) -> str:
+    return ", ".join(sorted({i.strip() for n in x if n for i in n.split(",")}))
 
 
 @pd.api.extensions.register_dataframe_accessor("reg")  # Name of new accessor, pd.DataFrame.<name>
