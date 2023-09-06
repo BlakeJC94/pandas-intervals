@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pandas_intervals.intervals_accessor import IntervalsAccessor
+from pandas_intervals.core import IntervalsAccessor
 from tests.helpers import random_intervals
 
 
