@@ -3,7 +3,7 @@ import pytest
 from pandas_intervals.ops import complement
 from pandas_intervals.ops.basic import complement as complement_basic
 from tests.helpers import (
-    assert_df_interval_set_equality,
+    assert_df_interval_times_equal,
     intervals_from_str,
 )
 
@@ -14,7 +14,7 @@ class TestIntervalsComplement:
     def check_operation(operation, test_case):
         df_a = intervals_from_str(test_case["a"])
         df_expected = intervals_from_str(test_case["complement_a"])
-        assert_df_interval_set_equality(df_expected, operation(df_a))
+        assert_df_interval_times_equal(df_expected, operation(df_a))
 
     @pytest.mark.parametrize(
         "test_case",

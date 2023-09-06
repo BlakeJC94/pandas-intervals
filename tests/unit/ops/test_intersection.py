@@ -3,7 +3,7 @@ import pytest
 from pandas_intervals.ops import intersection
 from pandas_intervals.ops.basic import intersection as intersection_basic
 from tests.helpers import (
-    assert_df_interval_set_equality,
+    assert_df_interval_times_equal,
     intervals_from_str,
 )
 
@@ -15,8 +15,8 @@ class TestIntervalsIntersection:
         df_a = intervals_from_str(test_case["a"])
         df_b = intervals_from_str(test_case["b"])
         df_expected = intervals_from_str(test_case["a_intersection_b"])
-        assert_df_interval_set_equality(df_expected, operation(df_a, df_b))
-        assert_df_interval_set_equality(df_expected, operation(df_b, df_a))
+        assert_df_interval_times_equal(df_expected, operation(df_a, df_b))
+        assert_df_interval_times_equal(df_expected, operation(df_b, df_a))
 
     @pytest.mark.parametrize(
         "test_case",

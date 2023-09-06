@@ -3,7 +3,7 @@ import pytest
 from pandas_intervals.ops import truncate
 from pandas_intervals.ops.basic import truncate as truncate_basic
 from tests.helpers import (
-    assert_df_interval_set_equality,
+    assert_df_interval_times_equal,
     intervals_from_str,
 )
 
@@ -22,7 +22,7 @@ class TestIntervalsTruncate:
         df_b = intervals_from_str(test_case["b"])
         df_expected = intervals_from_str(test_case["a_diff_b"])
         df_output = operation(df_a, df_b)
-        assert_df_interval_set_equality(df_expected, df_output)
+        assert_df_interval_times_equal(df_expected, df_output)
 
     @pytest.mark.parametrize(
         "test_case",

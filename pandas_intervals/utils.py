@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Iterable, List, Tuple, Any, Optional
+from typing import Callable, Iterable, List, Tuple, Any, Optional, Set
 
 import pandas as pd
 
@@ -13,8 +13,8 @@ def sort_intervals(
     return result
 
 
-def comma_join(x: List[str]) -> str:
-    return ", ".join(sorted({i.strip() for n in x if n for i in n.split(",")}))
+def df_to_set(df: pd.DataFrame) -> Set[List[Any]]:
+    return set(df.itertuples(index=False, name=None))
 
 
 def _apply_operation_to_groups(

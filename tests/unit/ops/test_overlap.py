@@ -6,7 +6,7 @@ from pandas_intervals.ops.basic import (
     non_overlap as non_overlap_basic,
 )
 from tests.helpers import (
-    assert_df_interval_set_equality,
+    assert_df_interval_times_equal,
     intervals_from_str,
 )
 
@@ -24,8 +24,8 @@ class TestIntervalsOverlap:
         df_a = intervals_from_str(test_case["a"])
         df_expected_overlap_a = intervals_from_str(test_case["overlap_a"])
         df_expected_non_overlap_a = intervals_from_str(test_case["non_overlap_a"])
-        assert_df_interval_set_equality(df_expected_overlap_a, operations[0](df_a))
-        assert_df_interval_set_equality(df_expected_non_overlap_a, operations[1](df_a))
+        assert_df_interval_times_equal(df_expected_overlap_a, operations[0](df_a))
+        assert_df_interval_times_equal(df_expected_non_overlap_a, operations[1](df_a))
 
     @pytest.mark.parametrize(
         "test_case",

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Union, List, Mapping, Optional, Set, Any, Tuple, Dict, Callable
-from itertools import product
+from typing import Union, List, Mapping, Optional, Set, Any, Tuple
 
 import pandas as pd
 import numpy as np
@@ -64,25 +63,6 @@ def assert_df_interval_times_equal(
             plt(*other_dfs, foo, bar)
 
         raise err
-
-
-# TODO Remove
-def assert_df_interval_set_equality(df_expected: pd.DataFrame, df_output: pd.DataFrame):
-    df_expected = df_expected.astype(dict(start=float, end=float))
-    df_output = df_output.astype(dict(start=float, end=float))
-    set_expected = df_to_set(df_expected)
-    set_output = df_to_set(df_output)
-    assert len(set_expected) == len(set_output)
-    assert set_expected == set_output
-    assert len(df_expected) == len(df_output)
-
-
-def df_to_set(df: pd.DataFrame) -> Set[List[Any]]:
-    return set(df.itertuples(index=False, name=None))
-
-
-def df_to_list(df: pd.DataFrame) -> Set[List[Any]]:
-    return list(df.itertuples(index=False, name=None))
 
 
 def intervals_from_str(

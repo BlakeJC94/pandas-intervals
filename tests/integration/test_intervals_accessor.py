@@ -6,10 +6,10 @@ import pandas as pd
 import pytest
 
 import pandas_intervals
+from pandas_intervals.utils import df_to_set
 from tests.helpers import (
-    assert_df_interval_set_equality,
+    assert_df_interval_times_equal,
     random_intervals,
-    df_to_set,
 )
 
 
@@ -128,7 +128,7 @@ class TestIntervalsAccessor:
 
         df_a_pad = df_a.ivl.pad(**kwargs)
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_pad,
             expected_pad,
         )
@@ -143,16 +143,16 @@ class TestIntervalsAccessor:
         expected_overlap = df_a.ivl.basic.overlap()
         expected_non_overlap = df_a.ivl.basic.non_overlap()
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_overlap,
             expected_overlap,
         )
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_non_overlap,
             expected_non_overlap,
         )
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_overlap.ivl.union(df_a_non_overlap),
             df_a,
         )
@@ -169,7 +169,7 @@ class TestIntervalsAccessor:
         df_a_complement = df_a.ivl.complement(**kwargs)
         expected_complement = df_a.ivl.basic.complement(**kwargs)
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_complement,
             expected_complement,
         )
@@ -186,11 +186,11 @@ class TestIntervalsAccessor:
 
         expected = union_basic(df_a, df_b)
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_union_b,
             df_b_union_a,
         )
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_union_b,
             expected,
         )
@@ -205,12 +205,12 @@ class TestIntervalsAccessor:
 
         expected = df_a.ivl.basic.intersection(df_b)
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_intersection_b,
             df_b_intersection_a,
         )
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_intersection_b,
             expected,
         )
@@ -220,7 +220,7 @@ class TestIntervalsAccessor:
         df_combine_a = df_a.ivl.combine()
         expected_combine_a = df_a.ivl.basic.combine()
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_combine_a,
             expected_combine_a,
         )
@@ -235,11 +235,11 @@ class TestIntervalsAccessor:
         expected_a_trunc_b = df_a.ivl.basic.truncate(df_b)
         expected_b_trunc_a = df_b.ivl.basic.truncate(df_a)
 
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_a_trunc_b,
             expected_a_trunc_b,
         )
-        assert_df_interval_set_equality(
+        assert_df_interval_times_equal(
             df_b_trunc_a,
             expected_b_trunc_a,
         )
