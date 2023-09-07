@@ -15,7 +15,7 @@ TODO:
 * [ ] Doctests
 * [ ] Acceptance tests
 * [ ] Documentation
-* [ ] Upgrade asserter
+* [x] Upgrade asserter
 
 
 This library provides `ivl` extension: a standard interface and methods for `DataFrames` of "interval"-like objects, where each object is specified by a `start` and an `end`.
