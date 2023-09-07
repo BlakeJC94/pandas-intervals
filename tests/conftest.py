@@ -43,12 +43,12 @@ def assert_df_interval_times_equal(
         )
         idx_row = np.min(np.where(times_expected != times_output)[0])
 
-        idx_start = idx_row - 2
+        idx_start = max(idx_row - 2, 0)
         win_start = min(
             df_expected.iloc[idx_start]["start"], df_output.iloc[idx_start]["start"]
         )
 
-        idx_end = idx_row + 3
+        idx_end = min(idx_row + 3, len(df_expected) - 1, len(df_output) - 1)
         win_end = max(df_expected.iloc[idx_end]["end"], df_output.iloc[idx_end]["end"])
 
         foo = df_expected[
