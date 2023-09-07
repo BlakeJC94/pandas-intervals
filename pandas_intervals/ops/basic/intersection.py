@@ -27,6 +27,15 @@ def intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
             result.add(ivl_b)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
+
+def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+    cols = df_a.columns
+    intervals_a = df_to_list(df_a)
+    intervals_b = df_to_list(df_b)
+
+    result = set()
+    for ivl_a, ivl_b in product(intervals_a, intervals_b):
+        if not _intervals_intersect(ivl_a, ivl_b):
             result.add(ivl_a)
             result.add(ivl_b)
 
