@@ -33,10 +33,15 @@ def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     intervals_a = df_to_list(df_a)
     intervals_b = df_to_list(df_b)
 
-    result = set()
+    result = set([*intervals_a, *intervals_b])
     for ivl_a, ivl_b in product(intervals_a, intervals_b):
-        if not _intervals_intersect(ivl_a, ivl_b):
-            result.add(ivl_a)
-            result.add(ivl_b)
+        if _intervals_intersect(ivl_a, ivl_b):
+            if ivl_a in result:
+                result.remove(ivl_a)
+            if ivl_b in result:
+                result.remove(ivl_b)
+
+    return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
+
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
