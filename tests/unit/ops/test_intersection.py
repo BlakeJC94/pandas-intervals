@@ -2,14 +2,21 @@ import pytest
 
 from pandas_intervals.ops import intersection
 from pandas_intervals.ops.basic import intersection as intersection_basic
+from pandas_intervals.ops.intersection import _get_mask_no_ref_overlap
 from tests.conftest import (
     assert_df_interval_times_equal,
     intervals_from_str,
 )
 
 
+def test_get_mask_no_ref_overlap_tangential_intervals():
+    df_a = intervals_from_str("  (-----]       ")
+    df_b = intervals_from_str("        (-----] ")
+    assert not _get_mask_no_ref_overlap(df_a, df_b).any()
+    assert not _get_mask_no_ref_overlap(df_b, df_a).any()
+
 @pytest.mark.parametrize("operation", [intersection_basic, intersection])
-class TestIntervalsIntersection:
+class TestIntersection:
     @staticmethod
     def check_operation(operation, test_case):
         df_a = intervals_from_str(test_case["a"])
