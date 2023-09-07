@@ -18,7 +18,12 @@ def _get_mask_no_ref_overlap(df_ref, df):
     # When the insertion index is the same for both the interval start and end, the
     # interval has no overlapping intervals in the reference set
     mask_no_overlap_ref = start_insert_idxs == end_insert_idxs
-    return mask_no_overlap_ref
+
+    # Exclude when intervals are seemingly overlapping at a single point
+    mask_df_start_in_ref_end = np.isin(starts, ref_ends)
+    mask_df_end_in_ref_start = np.isin(ends, ref_starts)
+
+    return mask_no_overlap_ref & ~mask_df_end_in_ref_start & ~mask_df_start_in_ref_end
 
 
 def intersection(
