@@ -2,24 +2,12 @@ import time
 import os
 from copy import deepcopy
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-
-
-DEFAULT_EXPS_N_INTERVALS = [
-    20,
-    100,
-    500,
-    1000,
-]
-DEFAULT_N_TRIALS_PER_EXP = 3
-
-skipif_pytest_acceptance_not_set = pytest.mark.skipif(
-    not os.environ.get("PYTEST_ACCEPTANCE", "False").lower().startswith("t"),
-    reason="PYTEST_ACCEPTANCE=True not set in environment",
-)
 
 
 def benchmark(func):
@@ -43,53 +31,80 @@ def run(
     act_0_fn,
     act_1_fn,
     check_fn,
-    exps_n_intervals=None,
-    n_trials_per_exp=None,
+    n_intervals,
+    expected_ratio,
+    results_record,
+    n_trials=5,
 ):
-    exps_n_intervals = exps_n_intervals or DEFAULT_EXPS_N_INTERVALS
-    n_trials_per_exp = n_trials_per_exp or DEFAULT_N_TRIALS_PER_EXP
+    exp_result = []
+    for _ in range(n_trials):
+        trial_result = []
+
+        args, kwargs = arrange_fn(n_intervals)
+
+        args_0, kwargs_0 = deepcopy(args), deepcopy(kwargs)
+        output_0, time_0 = act_0_fn(*args_0, **kwargs_0)
+        trial_result.append(time_0)
+
+        args_1, kwargs_1 = deepcopy(args), deepcopy(kwargs)
+        output_1, time_1 = act_1_fn(*args_1, **kwargs_1)
+        trial_result.append(time_1)
+
+        check_fn(
+            output_0,
+            output_1,
+            *args,
+        )
+
+        exp_result.append(trial_result)
+
+    results = pd.DataFrame(exp_result, columns=["time_0", "time_1"])
+    ratio = calculate_ratio(results)
+    assert ratio > expected_ratio, f"{n_intervals=}, {ratio=}, {expected_ratio=}"
+    results_record.append((n_intervals, results))
+    return results
+
+
+def calculate_ratio(results: pd.DataFrame):
+    results = results.mean()
+    return results["time_0"] / results["time_1"]
+
+
+@pytest.fixture(scope="function")
+def results_record(request):
+
+    file_name = request.function.__name__.replace(".", "-")
+    artifacts_dir = Path("./tests/artifacts")
+    for fp in artifacts_dir.glob(f"{file_name}.*"):
+        fp.unlink()
+
+    file_path = artifacts_dir / file_name
 
     results = []
-    for n_intervals in exps_n_intervals:
-        exp_result = []
-        for i_trial in range(n_trials_per_exp):
-            # logger.debug(f"  {i_trial = }")
-            trial_result = []
+    yield results
 
-            args, kwargs = arrange_fn(n_intervals)
+    if len(results) > 0:
+        results = pd.concat([df.assign(n_intervals=n_ints) for n_ints, df in results])
+        results.to_csv(file_path.with_suffix(".csv"), index=False)
 
-            args_0, kwargs_0 = deepcopy(args), deepcopy(kwargs)
-            output_0, time_0 = act_0_fn(*args_0, **kwargs_0)
-            trial_result.append(time_0)
-
-            args_1, kwargs_1 = deepcopy(args), deepcopy(kwargs)
-            output_1, time_1 = act_1_fn(*args_1, **kwargs_1)
-            trial_result.append(time_1)
-
-            check_fn(
-                output_0,
-                output_1,
-                *args,
-            )
-
-            exp_result.append(trial_result)
-        results.append(exp_result)
-    return np.array(results)
+        fig = plot_results(results, file_name)
+        fig.savefig(file_path.with_suffix(".png"))
 
 
-def plot_results(results, exps_n_intervals=None):
-    exps_n_intervals = exps_n_intervals or DEFAULT_EXPS_N_INTERVALS
+def plot_results(results: pd.DataFrame, title: str):
+    results = results.groupby("n_intervals").mean().sort_index()
 
+    exps_n_intervals = results.index.tolist()
     x = np.arange(len(exps_n_intervals))  # the label locations
     width = 0.25  # the width of the bars
     multiplier = 0
 
     fig, ax = plt.subplots(layout="constrained")
 
-    for i, algo in enumerate(["non-vec", "vec"]):
-        measurement = results.mean(axis=1)[:, i]
+    for col in ["time_0", "time_1"]:
+        measurement = results[col].to_numpy()
         offset = width * multiplier
-        rects = ax.bar(x + offset, measurement * 1e-6, width, label=algo)
+        rects = ax.bar(x + offset, measurement * 1e-6, width, label=col)
         ax.bar_label(
             rects,
             labels=[str(timedelta(microseconds=t * 1e-3)) for t in measurement],
@@ -97,11 +112,9 @@ def plot_results(results, exps_n_intervals=None):
         )
         multiplier += 1
 
-    # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel("Time (ms)")
-    ax.set_title("Algo speed by exp (n_intervals)")
+    ax.set_title(title)
     ax.set_xticks(x + width, exps_n_intervals)
-    ax.legend(loc="upper left", ncols=3)
+    ax.legend(loc="upper left", ncols=2)
 
-    plt.show()
     return fig
