@@ -12,6 +12,10 @@ def _get_overlap_mask(df_a: pd.DataFrame) -> np.ndarray:
     for start_a, end_a, *_ in intervals_a:
         overlap = False
         for start_b, end_b, *_ in intervals_a:
+            if end_b < start_a:
+                continue
+            if end_a < start_b:
+                break
             if (
                 (start_a < start_b < end_a)
                 or (start_a < end_b < end_a)

@@ -17,14 +17,22 @@ def _intervals_intersect(ivl_a: Tuple[float, float], ivl_b: Tuple[float, float])
 
 def intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     cols = df_a.columns
-    intervals_a = df_to_list(df_a)
-    intervals_b = df_to_list(df_b)
+    intervals_a = df_to_list(df_a.sort_values('start'))
+    intervals_b = df_to_list(df_b.sort_values('start'))
 
     result = set()
-    for ivl_a, ivl_b in product(intervals_a, intervals_b):
-        if _intervals_intersect(ivl_a, ivl_b):
-            result.add(ivl_a)
-            result.add(ivl_b)
+    for ivl_a in intervals_a:
+        start_a, end_a, *_ = ivl_a
+        for ivl_b in intervals_b:
+            start_b, end_b, *_ = ivl_a
+            if end_b < start_a:
+                continue
+            if end_a < start_b:
+                break
+
+            if _intervals_intersect(ivl_a, ivl_b):
+                result.add(ivl_a)
+                result.add(ivl_b)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
 
@@ -34,12 +42,20 @@ def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     intervals_b = df_to_list(df_b)
 
     result = set([*intervals_a, *intervals_b])
-    for ivl_a, ivl_b in product(intervals_a, intervals_b):
-        if _intervals_intersect(ivl_a, ivl_b):
-            if ivl_a in result:
-                result.remove(ivl_a)
-            if ivl_b in result:
-                result.remove(ivl_b)
+    for ivl_a in intervals_a:
+        start_a, end_a, *_ = ivl_a
+        for ivl_b in intervals_b:
+            start_b, end_b, *_ = ivl_a
+            if end_b < start_a:
+                continue
+            if end_a < start_b:
+                break
+
+            if _intervals_intersect(ivl_a, ivl_b):
+                if ivl_a in result:
+                    result.remove(ivl_a)
+                if ivl_b in result:
+                    result.remove(ivl_b)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
 
@@ -49,9 +65,17 @@ def diff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     intervals_b = df_to_list(df_b)
 
     result = set(intervals_a)
-    for ivl_a, ivl_b in product(intervals_a, intervals_b):
-        if _intervals_intersect(ivl_a, ivl_b):
-            if ivl_a in result:
-                result.remove(ivl_a)
+    for ivl_a in intervals_a:
+        start_a, end_a, *_ = ivl_a
+        for ivl_b in intervals_b:
+            start_b, end_b, *_ = ivl_a
+            if end_b < start_a:
+                continue
+            if end_a < start_b:
+                break
+
+            if _intervals_intersect(ivl_a, ivl_b):
+                if ivl_a in result:
+                    result.remove(ivl_a)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])

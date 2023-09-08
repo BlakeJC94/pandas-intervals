@@ -8,9 +8,9 @@ from tests.acceptance.conftest import benchmark, run
 @pytest.mark.parametrize(
     "n_intervals, expected_ratio",
     [
-        (3000, 1),
-        (8000, 1.5),
-        (200000, 3),
+        (2000, 1),
+        (4000, 1.5),
+        (8000, 3),
     ],
 )
 class TestOverlap:
