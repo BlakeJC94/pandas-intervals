@@ -227,7 +227,21 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return results.reset_index(drop=True)
 
     # TODO Test
-    def window(
+    def shorter_than(self, upper_bound: float, strict: bool = False) -> pd.DataFrame:
+        if strict:
+            self.df.loc[self.durations < float(upper_bound)]
+        else:
+            self.df.loc[self.durations <= float(upper_bound)]
+
+    # TODO Test
+    def longer_than(self, lower_bound: float, strict: bool = False) -> pd.DataFrame:
+        if strict:
+            self.df.loc[self.durations > float(lower_bound)]
+        else:
+            self.df.loc[self.durations >= float(lower_bound)]
+
+    # TODO Test
+    def between(
         self,
         left_bound: Optional[float] = None,
         right_bound: Optional[float] = None,
@@ -264,7 +278,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
         self.df["start"] = self.df["start"] - (left_pad or 0)
         self.df["end"] = self.df["end"] + (right_pad or 0)
-        return self.df.loc[self.df["end"] - self.df["start"] >= 0]
+        return self.df.loc[self.durations >= 0]
 
     def overlap(self) -> pd.DataFrame:
         operation = basic.overlap if self._basic else overlap
