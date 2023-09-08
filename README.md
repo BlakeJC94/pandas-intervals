@@ -11,9 +11,9 @@ TODO:
 * [x] Vectorise all methods
     * [x] Implement property-based tests
     * [x] Refactor tests to test specific aspects
-* [ ] Set difference
+* [x] Set difference
 * [ ] Doctests
-* [ ] Acceptance tests
+* [x] Acceptance tests
 * [ ] Documentation
 * [x] Upgrade asserter
 
