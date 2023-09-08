@@ -36,6 +36,11 @@ def intersection(
 
     return pd.concat(results, axis=0)
 
+def diff(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+) -> pd.DataFrame:
+    return df_a[_get_mask_no_ref_overlap(df_b, df_a)]
 
 def symdiff(
     df_a: pd.DataFrame,

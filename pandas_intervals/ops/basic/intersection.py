@@ -43,5 +43,15 @@ def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
 
+def diff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+    cols = df_a.columns
+    intervals_a = df_to_list(df_a)
+    intervals_b = df_to_list(df_b)
+
+    result = set(intervals_a)
+    for ivl_a, ivl_b in product(intervals_a, intervals_b):
+        if _intervals_intersect(ivl_a, ivl_b):
+            if ivl_a in result:
+                result.remove(ivl_a)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])

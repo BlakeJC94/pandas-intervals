@@ -14,6 +14,7 @@ from pandas_intervals.ops import (
     overlap,
     non_overlap,
     intersection,
+    diff,
     symdiff,
     complement,
     combine,
@@ -298,6 +299,13 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
         operation = basic.intersection if self._basic else intersection
+        return self.apply_to_groups(
+            operation,
+            [self.df, self.format(df)],
+        )
+
+    def diff(self, df: pd.DataFrame) -> pd.DataFrame:
+        operation = basic.diff if self._basic else diff
         return self.apply_to_groups(
             operation,
             [self.df, self.format(df)],
