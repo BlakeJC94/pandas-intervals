@@ -70,10 +70,9 @@ def calculate_ratio(results: pd.DataFrame):
     return results["time_0"] / results["time_1"]
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="class")
 def results_record(request):
-
-    file_name = request.function.__name__.replace(".", "-")
+    file_name = request.cls.__name__.replace(".", "-")
     artifacts_dir = Path("./tests/artifacts")
     for fp in artifacts_dir.glob(f"{file_name}.*"):
         fp.unlink()
@@ -83,7 +82,7 @@ def results_record(request):
     results = []
     yield results
 
-    if len(results) > 0:
+    if len(results) > 1:
         results = pd.concat([df.assign(n_intervals=n_ints) for n_ints, df in results])
         results.to_csv(file_path.with_suffix(".csv"), index=False)
 

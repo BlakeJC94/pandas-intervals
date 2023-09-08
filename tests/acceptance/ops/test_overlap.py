@@ -8,34 +8,28 @@ from tests.acceptance.conftest import benchmark, run
 @pytest.mark.parametrize(
     "n_intervals, expected_ratio",
     [
-        (1000, 3),
-        (2000, 12),
-        (5000, 40),
+        (3000, 1),
+        (8000, 1.5),
+        (200000, 3),
     ],
 )
-class TestTruncate:
+class TestOverlap:
     @staticmethod
     def arrange(n_intervals):
         df_a = random_intervals(n_intervals=n_intervals).ivl()
-        df_b = random_intervals(n_intervals=n_intervals).ivl()
-        return [df_a, df_b], {}
-
+        return [df_a], {}
 
     @staticmethod
     @benchmark
-    def act_0(df_a, df_b):
-        return df_a.ivl.basic.truncate(df_b)
-
+    def act_0(df_a):
+        return df_a.ivl.basic.overlap()
 
     @staticmethod
     @benchmark
-    def act_1(df_a, df_b):
-        return df_a.ivl.truncate(df_b)
+    def act_1(df_a):
+        return df_a.ivl.overlap()
 
-
-    def test_it_runs_faster_when_vectorised(
-        self, n_intervals, expected_ratio, results_record
-    ):
+    def test_complement(self, n_intervals, expected_ratio, results_record):
         run(
             self.arrange,
             self.act_0,

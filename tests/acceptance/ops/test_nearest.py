@@ -1,6 +1,6 @@
 import pytest
 
-from tests.conftest import assert_df_interval_times_equal, random_intervals
+from tests.conftest import random_intervals
 from tests.acceptance.conftest import benchmark, run
 
 
@@ -10,10 +10,10 @@ from tests.acceptance.conftest import benchmark, run
     [
         (1000, 3),
         (2000, 12),
-        (5000, 40),
+        (4000, 40),
     ],
 )
-class TestTruncate:
+class TestNearest:
     @staticmethod
     def arrange(n_intervals):
         df_a = random_intervals(n_intervals=n_intervals).ivl()
@@ -24,13 +24,17 @@ class TestTruncate:
     @staticmethod
     @benchmark
     def act_0(df_a, df_b):
-        return df_a.ivl.basic.truncate(df_b)
+        return df_a.ivl.basic.nearest(df_b)
 
 
     @staticmethod
     @benchmark
     def act_1(df_a, df_b):
-        return df_a.ivl.truncate(df_b)
+        return df_a.ivl.nearest(df_b)
+
+    @staticmethod
+    def check(df_a, df_b, *_):
+        assert (df_a['min_dist'] == df_b['min_dist']).all()
 
 
     def test_it_runs_faster_when_vectorised(
@@ -40,8 +44,9 @@ class TestTruncate:
             self.arrange,
             self.act_0,
             self.act_1,
-            assert_df_interval_times_equal,
+            self.check,
             n_intervals=n_intervals,
             expected_ratio=expected_ratio,
             results_record=results_record,
         )
+

@@ -10,10 +10,10 @@ from tests.acceptance.conftest import benchmark, run
     [
         (1000, 3),
         (2000, 12),
-        (5000, 40),
+        (4000, 40),
     ],
 )
-class TestTruncate:
+class TestIntersection:
     @staticmethod
     def arrange(n_intervals):
         df_a = random_intervals(n_intervals=n_intervals).ivl()
@@ -24,13 +24,13 @@ class TestTruncate:
     @staticmethod
     @benchmark
     def act_0(df_a, df_b):
-        return df_a.ivl.basic.truncate(df_b)
+        return df_a.ivl.basic.intersection(df_b)
 
 
     @staticmethod
     @benchmark
     def act_1(df_a, df_b):
-        return df_a.ivl.truncate(df_b)
+        return df_a.ivl.intersection(df_b)
 
 
     def test_it_runs_faster_when_vectorised(
