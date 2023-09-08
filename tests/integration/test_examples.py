@@ -49,6 +49,7 @@ random_regions = partial(
     random_fields=[("tag", [0, 1, 2]), ("note", [None, "train", "val"])],
 )
 
+
 @pd.api.extensions.register_dataframe_accessor(
     "reg"
 )  # Name of new accessor, pd.DataFrame.<name>

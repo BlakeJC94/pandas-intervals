@@ -20,12 +20,10 @@ class TestNearest:
         df_b = random_intervals(n_intervals=n_intervals).ivl()
         return [df_a, df_b], {}
 
-
     @staticmethod
     @benchmark
     def act_0(df_a, df_b):
         return df_a.ivl.basic.nearest(df_b)
-
 
     @staticmethod
     @benchmark
@@ -34,8 +32,7 @@ class TestNearest:
 
     @staticmethod
     def check(df_a, df_b, *_):
-        assert (df_a['min_dist'] == df_b['min_dist']).all()
-
+        assert (df_a["min_dist"] == df_b["min_dist"]).all()
 
     def test_it_runs_faster_when_vectorised(
         self, n_intervals, expected_ratio, results_record
@@ -49,4 +46,3 @@ class TestNearest:
             expected_ratio=expected_ratio,
             results_record=results_record,
         )
-

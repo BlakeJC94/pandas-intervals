@@ -20,18 +20,15 @@ class TestIntersection:
         df_b = random_intervals(n_intervals=n_intervals).ivl()
         return [df_a, df_b], {}
 
-
     @staticmethod
     @benchmark
     def act_0(df_a, df_b):
         return df_a.ivl.basic.intersection(df_b)
 
-
     @staticmethod
     @benchmark
     def act_1(df_a, df_b):
         return df_a.ivl.intersection(df_b)
-
 
     def test_it_runs_faster_when_vectorised(
         self, n_intervals, expected_ratio, results_record

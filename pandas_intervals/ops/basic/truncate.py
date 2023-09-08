@@ -3,6 +3,7 @@ import pandas as pd
 from .combine import combine
 from pandas_intervals.utils import df_to_list
 
+
 def truncate(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
@@ -11,7 +12,7 @@ def truncate(
         return df_a
 
     df_a = df_a.sort_values("start")
-    df_b = combine(df_b[['start', 'end']]).sort_values("start")
+    df_b = combine(df_b[["start", "end"]]).sort_values("start")
 
     # Remove zero duration df_b that are equal to start/end of df_a (no effect)
     _mask = ((df_b["end"] - df_b["start"]) == 0) & (
@@ -73,4 +74,3 @@ def truncate(
             results.append((start_a, end_a, *metadata))
 
     return pd.DataFrame(results, columns=df_a.columns)
-

@@ -5,7 +5,10 @@ import pandas as pd
 
 from pandas_intervals.utils import df_to_list
 
-def _intervals_intersect(ivl_a: Tuple[float, float], ivl_b: Tuple[float, float]) -> bool:
+
+def _intervals_intersect(
+    ivl_a: Tuple[float, float], ivl_b: Tuple[float, float]
+) -> bool:
     start_a, end_a, *_ = ivl_a
     start_b, end_b, *_ = ivl_b
     return (
@@ -15,10 +18,11 @@ def _intervals_intersect(ivl_a: Tuple[float, float], ivl_b: Tuple[float, float])
         or (start_b < end_a < end_b)
     )
 
+
 def intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     cols = df_a.columns
-    intervals_a = df_to_list(df_a.sort_values('start'))
-    intervals_b = df_to_list(df_b.sort_values('start'))
+    intervals_a = df_to_list(df_a.sort_values("start"))
+    intervals_b = df_to_list(df_b.sort_values("start"))
 
     result = set()
     for ivl_a in intervals_a:
@@ -35,6 +39,7 @@ def intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
                 result.add(ivl_b)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
+
 
 def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     cols = df_a.columns
@@ -58,6 +63,7 @@ def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
                     result.remove(ivl_b)
 
     return pd.DataFrame(result, columns=cols).sort_values(["start", "end"])
+
 
 def diff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     cols = df_a.columns

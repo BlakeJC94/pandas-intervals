@@ -41,6 +41,7 @@ def plot_interval_groups(
         values.append(v)
     return _plot_interval_groups(*values, colors, names, **layout_kwargs)
 
+
 def _plot_interval_groups(
     *dfs,
     colors: Optional[List[str]] = None,

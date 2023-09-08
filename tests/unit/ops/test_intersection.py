@@ -2,9 +2,9 @@ import pytest
 
 from pandas_intervals.ops import intersection, symdiff, diff
 from pandas_intervals.ops.basic import (
-        intersection as intersection_basic,
-        symdiff as symdiff_basic,
-        diff as diff_basic,
+    intersection as intersection_basic,
+    symdiff as symdiff_basic,
+    diff as diff_basic,
 )
 from pandas_intervals.ops.intersection import _get_mask_no_ref_overlap
 from tests.conftest import (
@@ -18,6 +18,7 @@ def test_get_mask_no_ref_overlap_tangential_intervals():
     df_b = intervals_from_str("        (-----] ")
     assert not _get_mask_no_ref_overlap(df_a, df_b).any()
     assert not _get_mask_no_ref_overlap(df_b, df_a).any()
+
 
 @pytest.mark.parametrize("operation", [intersection_basic, intersection])
 class TestIntersection:
@@ -46,7 +47,9 @@ class TestIntersection:
             ),
         ],
     )
-    def test_it_calculates_intersection_args_no_overlap_within(self, test_case, operation):
+    def test_it_calculates_intersection_args_no_overlap_within(
+        self, test_case, operation
+    ):
         self.check_operation(operation, test_case)
 
     @pytest.mark.parametrize(
@@ -67,13 +70,13 @@ class TestIntersection:
             ),
         ],
     )
-    def test_it_returns_nothing_when_args_mutually_exclusive(self, test_case, operation):
+    def test_it_returns_nothing_when_args_mutually_exclusive(
+        self, test_case, operation
+    ):
         self.check_operation(operation, test_case)
 
-@pytest.mark.parametrize("operation", [
-    symdiff_basic,
-    symdiff
-])
+
+@pytest.mark.parametrize("operation", [symdiff_basic, symdiff])
 class TestSymdiff:
     @staticmethod
     def check_operation(operation, test_case):
@@ -122,13 +125,13 @@ class TestSymdiff:
             ),
         ],
     )
-    def test_it_returns_everything_when_args_mutually_exclusive(self, test_case, operation):
+    def test_it_returns_everything_when_args_mutually_exclusive(
+        self, test_case, operation
+    ):
         self.check_operation(operation, test_case)
 
-@pytest.mark.parametrize("operation", [
-    diff_basic,
-    diff
-])
+
+@pytest.mark.parametrize("operation", [diff_basic, diff])
 class TestDiff:
     @staticmethod
     def check_operation(operation, test_case):
@@ -175,5 +178,7 @@ class TestDiff:
             ),
         ],
     )
-    def test_it_returns_everything_when_args_mutually_exclusive(self, test_case, operation):
+    def test_it_returns_everything_when_args_mutually_exclusive(
+        self, test_case, operation
+    ):
         self.check_operation(operation, test_case)
