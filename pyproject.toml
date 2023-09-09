@@ -21,3 +21,10 @@ ruff = "^0.0.282"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --doctest-continue-on-failure"
+doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL NUMBER"
+# filterwarnings = [
+#     "ignore:PLACEHOLDER is deprecated:DeprecationWarning",
+# ]
