@@ -14,9 +14,9 @@ class TestIntervalsNearest:
     def check_operation(operation, test_case):
         df_a = intervals_from_str(test_case["a"])
         df_b = intervals_from_str(test_case["b"])
-        expected = pd.DataFrame({"min_dist": test_case["min_dist"]})
+        expected = pd.Series(test_case["min_dist"])
         result = operation(df_a, df_b)
-        assert result.iloc[:, 0].tolist() == expected.iloc[:, 0].tolist()
+        assert result.tolist() == expected.tolist()
 
     @pytest.mark.parametrize(
         "test_case",

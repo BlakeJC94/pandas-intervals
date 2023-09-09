@@ -32,7 +32,7 @@ class TestNearest:
 
     @staticmethod
     def check(df_a, df_b, *_):
-        assert (df_a["min_dist"] == df_b["min_dist"]).all()
+        assert (df_a == df_b).all()
 
     def test_it_runs_faster_when_vectorised(
         self, n_intervals, expected_ratio, results_record

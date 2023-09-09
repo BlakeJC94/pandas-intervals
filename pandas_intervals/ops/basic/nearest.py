@@ -6,7 +6,7 @@ from pandas_intervals.utils import df_to_list
 def nearest(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
-) -> pd.DataFrame:
+) -> pd.Series:
     intervals_a = df_to_list(df_a)
     intervals_b = df_to_list(df_b)
 
@@ -28,7 +28,7 @@ def nearest(
                 min_dist = 0
         results.append(min_dist)
 
-    return pd.DataFrame(
-        {"min_dist": results},
+    return pd.Series(
+        results,
         index=df_a.index,
     )
