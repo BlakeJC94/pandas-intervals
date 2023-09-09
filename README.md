@@ -212,6 +212,8 @@ $ pytest
 ```
 Benchmarks can be generated and ran with `$ pytest --runslow`.
 
+Branch `main` should be stable, all the latest changes will go onto the `dev` branch before being released on `main`.
+
 * Code is tested with `[pytest](https://docs.pytest.org)`
 * Code is styled using `[black](https://black.readthedocs.io)`
 * Code is linted with `[ruff](https://beta.ruff.rs)`
