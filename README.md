@@ -8,6 +8,29 @@ This library provides `ivl` extension: a standard interface and methods for `Dat
 
 The `IntervalsAccessor` object is also extensible and allows adding columns with default values and specifying how columns are aggregated when combining close intervals.
 
+## Installation
+Minimal requirements:
+* `Python >= 3.9`
+* `Pandas >= 1.5`
+* `Numpy >= 1.24`
+
+Install the latest stable version from `PyPi`:
+```
+$ pip install pandas_intervals
+```
+
+Or clone this repo and install:
+```
+$ git clone https://github.com/BlakeJC94/pandas_intervals
+$ cd pandas_intervals
+# If Poetry is avaliable:
+$ poetry install
+# Otherwise Pip requirements can be used:
+$ pip install -r requirements.txt
+$ pip install .
+```
+
+
 ## Quick start
 To enable this extension, we need to register this extension using the provided setup function.
 ```python
@@ -19,6 +42,7 @@ from pandas_intervals import setup_ivl_accessor
 setup_ivl_accessor()
 ```
 
+## Usage
 Say we have two sets of intervals `A` and `B` as specified by:
 ```
   A:     (----]    (----]         (--------------]
@@ -175,3 +199,23 @@ After defining and running this snippet, we now have
 * `pd.DataFrame(..).reg.all_notes()` available as a method on any DataFrame,
 * `pd.DataFrame(..).reg()` will return a formatted DataFrame as specified by the fields in `RegionsAccessor.additional_cols`,
 * All the methods on the `ivl` accessor come along for free!
+
+## Contributing
+Pull requests are most welcome!
+
+Dependencies and environments are managed with `[poetry](https://python-poetry.org)`. To get started developing for this package:
+```
+$ git clone https://github.com/BlakeJC94/pandas_intervals
+$ cd pandas_intervals
+$ poetry install
+$ pytest
+```
+Benchmarks can be generated and ran with `$ pytest --runslow`.
+
+* Code is tested with `[pytest](https://docs.pytest.org)`
+* Code is styled using `[black](https://black.readthedocs.io)`
+* Code is linted with `[ruff](https://beta.ruff.rs)`
+* [Semantic versioning](https://semver.org) is used in this repo
+    * Major version: rare, substantial changes that break backward compatibility
+    * Minor version: most changes - new features, models or improvements
+    * Patch version: small bug fixes and documentation-only changes
