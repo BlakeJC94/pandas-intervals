@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pandas-intervals"
-version = "0.1.0"
+version = "1.0.0"
 description = "Pandas extention for Dataframes of intervals"
 authors = ["BlakeJC94 <blakejamescook@gmail.com>"]
 license = "GPL-v3.0"
