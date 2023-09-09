@@ -1,5 +1,4 @@
 import random
-from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -251,4 +250,4 @@ class TestIntervalsAccessor:
         result = df_a.ivl.nearest(df_b)
         expected = df_a.ivl.basic.nearest(df_b)
 
-        assert result.iloc[:, 0].tolist() == expected.iloc[:, 0].tolist()
+        assert result.tolist() == expected.tolist()
