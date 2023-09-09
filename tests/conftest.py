@@ -6,6 +6,9 @@ import pandas as pd
 import pytest
 
 from pandas_intervals.vis import _plot_interval_groups as plt
+from pandas_intervals import setup_ivl_accessor
+
+setup_ivl_accessor()
 
 
 def pytest_addoption(parser):

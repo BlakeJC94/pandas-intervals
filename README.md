@@ -1,24 +1,6 @@
 # pandas-intervals
 Pandas extension for `DataFrame`s of intervals (AKA `spandas`).
 
-TODO:
-* [x] Build up bash DataFrame accessor
-* [x] Structure GroupBys to apply interval functions on specific groups of intervals
-* [x] Implement iterative methods for interval operations
-    * [x] Implement unit tests for iterative methods
-    * [x] Add more edge cases to the iterative methods
-* [x] Implement plot method for accessor
-* [x] Vectorise all methods
-    * [x] Implement property-based tests
-    * [x] Refactor tests to test specific aspects
-* [x] Set difference
-* [x] Acceptance tests
-* [x] Upgrade asserter
-* [x] Documentation
-* [x] Doctests
-* [ ] Decorator
-
-
 This library provides `ivl` extension: a standard interface and methods for `DataFrames` of "interval"-like objects, where each object is specified by a `start` and an `end`.
 * The columns `"start"` and `"end"` are automatically formatted as `float` types,
 * The order of the columns is strictly as specified,
@@ -27,6 +9,16 @@ This library provides `ivl` extension: a standard interface and methods for `Dat
 The `IntervalsAccessor` object is also extensible and allows adding columns with default values and specifying how columns are aggregated when combining close intervals.
 
 ## Quick start
+To enable this extension, we need to register this extension using the provided setup function.
+```python
+# Top of script/notebook, or top of `__init__.py` in module
+import pandas as pd
+
+from pandas_intervals import setup_ivl_accessor
+
+setup_ivl_accessor()
+```
+
 Say we have two sets of intervals `A` and `B` as specified by:
 ```
   A:     (----]    (----]         (--------------]
@@ -36,7 +28,10 @@ Say we have two sets of intervals `A` and `B` as specified by:
 We can represent these sets in `python` using `DataFrames`, and
 ```python
 import pandas as pd
-import pandas_intervals
+
+from pandas_intervals import setup_ivl_accessor
+
+setup_ivl_accessor()
 
 df_a = pd.DataFrame(
     [
@@ -142,7 +137,7 @@ class RegionsAccessor(IntervalsAccessor):
     # Additional required columns can be specified in a list of tuple
     # where each tuple is `(column_name, dtype, aggregation)`
     additional_fields = [
-        ("tag", "int64", "groupby"),
+        ("tag", "int64", "groupby"),  # Operations will apply to DFs of tag values separately
         ("note", "object", lambda x: ",".join(x)),
     ]
 

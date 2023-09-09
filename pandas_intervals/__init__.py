@@ -1,1 +1,1 @@
-from .core import IntervalsAccessor
+from .core import IntervalsAccessor, setup_ivl_accessor

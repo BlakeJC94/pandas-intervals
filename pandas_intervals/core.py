@@ -27,7 +27,6 @@ from .utils import sort_intervals, FieldsTrait, FormatTrait, Field
 Figure = plotly.graph_objects.Figure if plotly is not None else None
 
 
-@pd.api.extensions.register_dataframe_accessor("ivl")
 class IntervalsAccessor(FieldsTrait, FormatTrait):
     """A DataFrame accessor for frames containing intervals (columns "start" and "end").
 
@@ -599,3 +598,8 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             self.format(df),
             accessor=self,
         )
+
+
+def setup_ivl_accessor():
+    register = pd.api.extensions.register_dataframe_accessor("ivl")
+    register(IntervalsAccessor)
