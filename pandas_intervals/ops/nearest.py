@@ -24,8 +24,8 @@ def nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.Series:
     """
     if len(df_a) == 0 or len(df_b) == 0:
         logger.warning(f"Recieved empty intervals DataFrame.")
-        return pd.DataFrame(
-            {"min_dist": np.full((len(df_a)), np.inf)},
+        return pd.Series(
+            np.full((len(df_a)), np.inf),
             index=df_a.index,
         )
 
