@@ -12,10 +12,11 @@ TODO:
     * [x] Implement property-based tests
     * [x] Refactor tests to test specific aspects
 * [x] Set difference
-* [ ] Doctests
 * [x] Acceptance tests
-* [ ] Documentation
 * [x] Upgrade asserter
+* [x] Documentation
+* [x] Doctests
+* [ ] Decorator
 
 
 This library provides `ivl` extension: a standard interface and methods for `DataFrames` of "interval"-like objects, where each object is specified by a `start` and an `end`.
@@ -23,7 +24,7 @@ This library provides `ivl` extension: a standard interface and methods for `Dat
 * The order of the columns is strictly as specified,
 * Interval set operations (intersections, combinations, differences) can be called via the `ivl` property on any DataFrame after importing this module.
 
-The `IntervalsFrame` object is also extensible and allows adding columns with default values and specifying how columns are aggregated when combining close intervals.
+The `IntervalsAccessor` object is also extensible and allows adding columns with default values and specifying how columns are aggregated when combining close intervals.
 
 ## Quick start
 Say we have two sets of intervals `A` and `B` as specified by:
