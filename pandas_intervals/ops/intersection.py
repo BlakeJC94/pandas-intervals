@@ -34,7 +34,7 @@ def intersection(
     for df_ref, df in permutations([df_a, df_b]):
         results.append(df[~_get_mask_no_ref_overlap(df_ref, df)])
 
-    return pd.concat(results, axis=0)
+    return pd.concat(results, axis=0).drop_duplicates()
 
 
 def diff(
