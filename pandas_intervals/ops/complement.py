@@ -44,4 +44,4 @@ def complement(
     df_c["end"] = df.iloc[1:, 0].to_numpy()
     df_c = df_c[df.columns]
 
-    return pd.concat([pd.DataFrame(edges), df_c], axis=0).sort_values("start")
+    return pd.concat([pd.DataFrame(edges), df_c], axis=0)
