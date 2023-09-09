@@ -39,7 +39,7 @@ def plot_interval_groups(
     for k, v in dfs.items():
         names.append(k)
         values.append(v)
-    return _plot_interval_groups(*values, colors, names, **layout_kwargs)
+    return _plot_interval_groups(*values, colors=colors, names=names, **layout_kwargs)
 
 
 def _plot_interval_groups(
