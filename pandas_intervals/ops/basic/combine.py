@@ -2,7 +2,10 @@ from typing import Union, Optional, Dict, Callable
 
 import pandas as pd
 
+from pandas_intervals.utils import apply_accessor
 
+
+@apply_accessor
 def combine(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,

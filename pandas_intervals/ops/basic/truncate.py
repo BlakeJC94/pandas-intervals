@@ -1,9 +1,10 @@
 import pandas as pd
 
 from .combine import combine
-from pandas_intervals.utils import df_to_list
+from pandas_intervals.utils import apply_accessor, df_to_list
 
 
+@apply_accessor
 def truncate(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,

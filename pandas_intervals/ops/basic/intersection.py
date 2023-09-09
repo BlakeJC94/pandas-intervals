@@ -2,7 +2,7 @@ from typing import Tuple
 
 import pandas as pd
 
-from pandas_intervals.utils import df_to_list
+from pandas_intervals.utils import apply_accessor, df_to_list
 
 
 def _intervals_intersect(
@@ -20,6 +20,7 @@ def _intervals_intersect(
     )
 
 
+@apply_accessor
 def intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     # Track the index as a column
     df_a = df_a.assign(_index=df_a.index)
@@ -49,6 +50,7 @@ def intersection(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+@apply_accessor
 def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     # Track the index as a column
     df_a = df_a.assign(_index=df_a.index)
@@ -80,6 +82,7 @@ def symdiff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+@apply_accessor
 def diff(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     # Track the index as a column
     df_a = df_a.assign(_index=df_a.index)

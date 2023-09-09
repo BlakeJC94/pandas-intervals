@@ -1,8 +1,9 @@
 import pandas as pd
 
-from pandas_intervals.utils import df_to_list
+from pandas_intervals.utils import apply_accessor, df_to_list
 
 
+@apply_accessor
 def nearest(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,

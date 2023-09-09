@@ -58,16 +58,6 @@ class FieldsTrait:
         dtype = [(name, kind) for name, kind, _ in cls.fields]
         return pd.DataFrame(np.empty(0, dtype=np.dtype(dtype)))
 
-    @classmethod
-    @property
-    def apply_to_groups(cls) -> Callable:
-        return partial(
-            _apply_operation_to_groups,
-            groupby_cols=cls.groupby_cols,
-            aggregations=cls.aggregations,
-            additional_cols=cls.additional_cols,
-        )
-
 
 class FormatTrait:
     """Mixin used for providing a `format` method for an Accessor class."""
@@ -156,39 +146,36 @@ def df_to_list(df: pd.DataFrame) -> List[Tuple[Any]]:
     return list(df.itertuples(index=False, name=None))
 
 
-# TODO Turn this into a decorator which optially does this when supplied with accessor
-def _apply_operation_to_groups(
-    operation: Callable,
-    dfs: List[pd.DataFrame],
-    additional_cols: Optional[List[str]] = None,
-    groupby_cols: Optional[List[str]] = None,
-    aggregations: Optional[Dict[str, Agg]] = None,
-    **kwargs,
-) -> pd.DataFrame:
-    """Helper function to wrap an operation, apply it to `groupby` results acuss multiple
-    DataFrames, apply the `aggregations` kwarg if present in operation argspec, concatentate and
-    return results.
+def apply_accessor(func: Callable):
+    """Decorator for applying an intervals operation across groups automatically when given an
+    accessor.
     """
-    groupby_cols = groupby_cols or []
+    def inner(*dfs, accessor=None, **kwargs):
+        if accessor is None:
+            return func(*dfs, **kwargs)
 
-    results = []
-    for _, df_groups in _df_groups(dfs, groupby_cols=groupby_cols):
-        if (
-            aggregations is not None
-            and "aggregations" in inspect.getfullargspec(operation).args
-        ):
-            result = operation(*df_groups, aggregations=aggregations, **kwargs)
-        else:
-            result = operation(*df_groups, **kwargs)
-        results.append(result)
+        groupby_cols = accessor.groupby_cols
+        aggregations = accessor.aggregations
+        additional_cols = accessor.additional_cols
 
-    if any(not isinstance(r, (pd.DataFrame, pd.Series)) for r in results):
-        raise ValueError("Expected to get a list of `pd.DataFrame` or `pd.Series`.")
+        results = []
+        for _, df_groups in _df_groups(dfs, groupby_cols=groupby_cols):
+            if "aggregations" in inspect.getfullargspec(func).args:
+                result = func(*df_groups, aggregations=aggregations, **kwargs)
+            else:
+                result = func(*df_groups, **kwargs)
+            results.append(result)
 
-    results = pd.concat(results, axis=0)
-    if isinstance(results, pd.DataFrame):
-        results = sort_intervals(results, sort_cols=additional_cols)
-    return results
+        if any(not isinstance(r, (pd.DataFrame, pd.Series)) for r in results):
+            raise ValueError("Expected to get a list of `pd.DataFrame` or `pd.Series`.")
+
+        results = pd.concat(results, axis=0)
+        if isinstance(results, pd.DataFrame):
+            results = sort_intervals(results, sort_cols=additional_cols)
+
+        return results
+
+    return inner
 
 
 def _df_groups(

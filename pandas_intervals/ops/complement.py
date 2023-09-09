@@ -3,8 +3,10 @@ from typing import Callable, Union, List, Dict, Optional
 import pandas as pd
 
 from .combine import combine
+from pandas_intervals.utils import apply_accessor
 
 
+@apply_accessor
 def complement(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from pandas_intervals.utils import df_to_list
+from pandas_intervals.utils import apply_accessor, df_to_list
 
 
 def _get_overlap_mask(df_a: pd.DataFrame) -> np.ndarray:
@@ -28,12 +28,14 @@ def _get_overlap_mask(df_a: pd.DataFrame) -> np.ndarray:
     return np.array(mask)
 
 
+@apply_accessor
 def overlap(df_a: pd.DataFrame) -> pd.DataFrame:
     if df_a.empty:
         return df_a
     return df_a.loc[_get_overlap_mask(df_a)]
 
 
+@apply_accessor
 def non_overlap(df_a: pd.DataFrame) -> pd.DataFrame:
     if df_a.empty:
         return df_a

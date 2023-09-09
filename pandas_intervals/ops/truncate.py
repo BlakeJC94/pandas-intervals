@@ -3,6 +3,7 @@ import pandas as pd
 
 from .combine import combine
 from .intersection import _get_mask_no_ref_overlap
+from pandas_intervals.utils import apply_accessor
 
 
 def ffill(arr: np.ndarray) -> np.ndarray:
@@ -28,6 +29,7 @@ def bfill_step(arr, increase: bool = False):
     return ffill_step(arr[::-1], increase)[::-1]
 
 
+@apply_accessor
 def truncate(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     if len(df_a) == 0 or len(df_b) == 0:
         return df_a

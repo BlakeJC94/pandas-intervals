@@ -3,8 +3,10 @@ from typing import Callable, Union, Dict, Optional
 import pandas as pd
 
 from .overlap import _get_overlapping_mask
+from pandas_intervals.utils import apply_accessor
 
 
+@apply_accessor
 def combine(
     df: pd.DataFrame,
     aggregations: Optional[Dict[str, Union[str, Callable]]] = None,

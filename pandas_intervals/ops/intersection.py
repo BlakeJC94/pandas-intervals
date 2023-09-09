@@ -3,6 +3,8 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
+from pandas_intervals.utils import apply_accessor
+
 
 def _get_mask_no_ref_overlap(df_ref, df):
     ref_starts = np.sort(df_ref["start"].values)
@@ -26,6 +28,7 @@ def _get_mask_no_ref_overlap(df_ref, df):
     return mask_no_overlap_ref & ~mask_df_end_in_ref_start & ~mask_df_start_in_ref_end
 
 
+@apply_accessor
 def intersection(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
@@ -37,6 +40,7 @@ def intersection(
     return pd.concat(results, axis=0).drop_duplicates()
 
 
+@apply_accessor
 def diff(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,
@@ -44,6 +48,7 @@ def diff(
     return df_a[_get_mask_no_ref_overlap(df_b, df_a)]
 
 
+@apply_accessor
 def symdiff(
     df_a: pd.DataFrame,
     df_b: pd.DataFrame,

@@ -362,9 +362,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
         """
         operation = basic.overlap if self._basic else overlap
-        return self.apply_to_groups(
-            operation,
-            [self.df],
+        return operation(
+            self.df,
+            accessor=self,
         )
 
     def non_overlap(self) -> pd.DataFrame:
@@ -383,9 +383,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
         """
         operation = basic.non_overlap if self._basic else non_overlap
-        return self.apply_to_groups(
-            operation,
-            [self.df],
+        return operation(
+            self.df,
+            accessor=self,
         )
 
     # TODO Test unit duplicates
@@ -413,9 +413,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             df: Another DataFrame of intervals.
         """
         operation = basic.intersection if self._basic else intersection
-        return self.apply_to_groups(
-            operation,
-            [self.df, self.format(df)],
+        return operation(
+            self.df,
+            self.format(df),
+            accessor=self,
         )
 
     def diff(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -438,9 +439,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             df: Another DataFrame of intervals.
         """
         operation = basic.diff if self._basic else diff
-        return self.apply_to_groups(
-            operation,
-            [self.df, self.format(df)],
+        return operation(
+            self.df,
+            self.format(df),
+            accessor=self,
         )
 
     def symdiff(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -464,9 +466,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             df: Another DataFrame of intervals.
         """
         operation = basic.symdiff if self._basic else symdiff
-        return self.apply_to_groups(
-            operation,
-            [self.df, self.format(df)],
+        return operation(
+            self.df,
+            self.format(df),
+            accessor=self,
         )
 
     def combine(self, *dfs) -> pd.DataFrame:
@@ -498,9 +501,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
                 intervals.
         """
         operation = basic.combine if self._basic else combine
-        return self.apply_to_groups(
-            operation,
-            [self.union(*dfs)],
+        return operation(
+            self.union(*dfs),
+            accessor=self,
         ).reset_index(drop=True)
 
     def complement(
@@ -528,9 +531,9 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
         """
         operation = basic.complement if self._basic else complement
-        return self.apply_to_groups(
-            operation,
-            [self.df],
+        return operation(
+            self.df,
+            accessor=self,
             left_bound=left_bound,
             right_bound=right_bound,
         ).reset_index(drop=True)
@@ -561,9 +564,10 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             df: Another DataFrame of intervals.
         """
         operation = basic.truncate if self._basic else truncate
-        return self.apply_to_groups(
-            operation,
-            [self.df, self.format(df)],
+        return operation(
+            self.df,
+            self.format(df),
+            accessor=self,
         )
 
     def nearest(self, df: pd.DataFrame) -> pd.Series:
@@ -590,7 +594,8 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
             df: Another DataFrame of intervals.
         """
         operation = basic.nearest if self._basic else nearest
-        return self.apply_to_groups(
-            operation,
-            [self.df, self.format(df)],
+        return operation(
+            self.df,
+            self.format(df),
+            accessor=self,
         )

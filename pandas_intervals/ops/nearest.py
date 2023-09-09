@@ -4,10 +4,13 @@ import numpy as np
 import pandas as pd
 
 from .intersection import _get_mask_no_ref_overlap
+from pandas_intervals.utils import apply_accessor
+
 
 logger = logging.getLogger(__name__)
 
 
+@apply_accessor
 def nearest(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.Series:
     """Given DataFrames A and B containing columns `["start", "end"]` where each row represents an
     interval, calculate the distance to the closest interval in B for each row in A.
