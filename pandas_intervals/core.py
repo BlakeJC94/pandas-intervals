@@ -1,7 +1,6 @@
-from functools import partial
-from typing import Callable, Union, List, Dict, Optional
+from typing import List, Dict, Optional, List, Any
+from typing_extensions import Self
 
-import numpy as np
 import pandas as pd
 
 try:
@@ -22,126 +21,10 @@ from pandas_intervals.ops import (
     nearest,
 )
 from .vis import plot_intervals
-from .utils import _apply_operation_to_groups, sort_intervals
+from .utils import sort_intervals, FieldsTrait, FormatTrait, Field
 
 
-class FieldsTrait:
-    """Mixin used to set the essential columns/types of a DataFrame of interval-like objects.
-
-    Provides a scaffold for extending this further to add more columns with custom names, default
-    values, and aggregation methods.
-    """
-
-    _required_fields = [("start", "float64", "min"), ("end", "float64", "max")]
-    additional_fields = []
-    default_values = {}
-
-    @classmethod
-    @property
-    def fields(cls) -> Dict[str, Union[str, Callable]]:
-        return [*cls._required_fields, *cls.additional_fields]
-
-    @classmethod
-    @property
-    def cols(cls) -> List[str]:
-        return [i[0] for i in cls.fields]
-
-    @classmethod
-    @property
-    def required_cols(cls) -> List[str]:
-        return [i[0] for i in cls.fields if i[0] not in cls.default_values]
-
-    @classmethod
-    @property
-    def additional_cols(cls) -> List[str]:
-        return [i[0] for i in cls.fields if i[0] in cls.default_values]
-
-    @classmethod
-    @property
-    def aggregations(cls) -> Dict[str, Union[str, Callable]]:
-        return {col: agg for col, _, agg in cls.fields if agg != "groupby"}
-
-    @classmethod
-    @property
-    def groupby_cols(cls) -> List[str]:
-        return [col for col, _, agg in cls.fields if agg == "groupby"]
-
-    @classmethod
-    def empty(cls) -> pd.DataFrame:
-        dtype = [(name, kind) for name, kind, _ in cls.fields]
-        return pd.DataFrame(np.empty(0, dtype=np.dtype(dtype)))
-
-    @classmethod
-    @property
-    def apply_to_groups(cls) -> Callable:
-        return partial(
-            _apply_operation_to_groups,
-            groupby_cols=cls.groupby_cols,
-            aggregations=cls.aggregations,
-        )
-
-
-class FormatTrait:
-    """Mixin used for providing a `format` method for an Accessor class.
-
-    When the accessor is used, the `__init__` method will call the `format` method defined to
-    * Check DataFrame has required columns,
-    * Add additional cols with configured defaults,
-    * Check types and change if needed.
-
-    This will ensure that all the operations on DataFrames of interval-like objects have controlled
-    types and column names and orders across all operations used throughout this extension.
-    """
-
-    @classmethod
-    def format(cls, pandas_obj: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-        if pandas_obj is None or pandas_obj.columns.empty:
-            return cls.empty()
-        pandas_obj = pandas_obj.rename(
-            columns={i: col for i, col in enumerate(cls.cols)}
-        )
-        cls._validate(pandas_obj)
-        pandas_obj = cls._fill_defaults_for_cols(pandas_obj)
-        pandas_obj = cls._set_types(pandas_obj)
-        pandas_obj = cls._sort_columns(pandas_obj)
-        return pandas_obj
-
-    @classmethod
-    def _validate(cls, obj):
-        if any(c not in cls.additional_cols for c in cls.default_values):
-            raise ValueError(
-                f"{cls.__name__} contains keys in `default_values` not located in `additional_cols`."
-            )
-
-        missing_cols = [col for col in cls.required_cols if col not in obj]
-        if len(missing_cols) > 0:
-            raise ValueError(
-                f"DataFrame missing required column(s) '{', '.join(missing_cols)}'."
-            )
-
-        if (obj["end"] - obj["start"] < 0).any():
-            raise ValueError("DataFrame contains invalid intervals.")
-
-    @classmethod
-    def _fill_defaults_for_cols(cls, obj: pd.DataFrame) -> pd.DataFrame:
-        for (
-            col,
-            default_val,
-        ) in cls.default_values.items():
-            obj[col] = obj[col].fillna(default_val) if col in obj else default_val
-        return obj
-
-    @classmethod
-    def _set_types(cls, obj: pd.DataFrame) -> pd.DataFrame:
-        for col, kind, _ in cls.fields:
-            if obj.dtypes[col] != kind:
-                obj[col] = obj[col].astype(kind)
-        return obj
-
-    @classmethod
-    def _sort_columns(cls, obj: pd.DataFrame) -> pd.DataFrame:
-        extra_cols = [col for col in obj.columns if col not in cls.cols]
-        return obj[[*cls.cols, *extra_cols]]
+Figure = plotly.graph_objects.Figure if plotly is not None else None
 
 
 @pd.api.extensions.register_dataframe_accessor("ivl")
@@ -155,7 +38,16 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     To simply validate and format a DataFrame containing intervals, call this accessor on a
     DataFrame:
 
-        >>> df.regions()
+        >>> df = pd.DataFrame([(100, 200), (300, 400)])
+        >>> print(df)
+             0    1
+        0  100  200
+        1  300  400
+        >>> df = df.ivl()
+        >>> print(df)
+           start    end
+        0  100.0  200.0
+        1  300.0  400.0
 
     Can be extended by subclassing `IntervalsAccessor` and adding a decorator. For example, if we
     want to create an intervals accessor called `"regions"` which
@@ -172,7 +64,7 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         ...
         ...     # Additional required columns can be specified in a list of tuple
         ...     # where each tuple is `(column_name, dtype, aggregation)`
-        ...     additional_cols = [
+        ...     additional_fields = [
         ...         ("tag", "int64", "groupby"),
         ...         ("note", "object", lambda x: ','.join(x)),
         ...     ]
@@ -183,36 +75,106 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         ...          "note": "",
         ...     }
 
+    Attributes:
+        df: DataFrame that's accessed.
+        additional_fields: List of 3-tuples for additional columns to manage in accessor. Each
+            element is a tuple of name, type, and aggregator. The aggregator must match the spec
+            provided by `pd.DataFrame.groupby.agg(..)`, which can be a string (name of basic
+            operation) or a callable that maps a list of values to a single value. The reserved
+            aggregation `"groupby"` is used to group sets of intervals across additional column
+            values to apply operations without overlap.
+        default_values: Dictionary of `additional_fields` columns names to default values to fill in
+            for those columns when formatting a DataFrame. An error will be raised if an additional
+            column has not been given a default value here.
     """
 
+    additional_fields: List[Field] = []
+    default_values: Dict[str, Any] = {}
+
     def __init__(self, pandas_obj: Optional[pd.DataFrame] = None):
+        """Initialise the accessor. Called automatically when using `pd.DataFrame(...).ivl` or
+        `pd.DataFrame.ivl`.
+
+        When the accessor is used, the `__init__` method will call the `format` method defined to
+        * Check the accessor has a valid configuration,
+        * Check DataFrame has required columns,
+        * Add additional cols with configured defaults,
+        * Check types and change if needed.
+
+        This will ensure that all the operations on DataFrames of interval-like objects have controlled
+        types and column names and orders across all operations used throughout this extension.
+
+        Args:
+            pandas_obj: Object where this accessor is called from.
+        """
         self.df = self.format(pandas_obj)
         self._basic = False
 
-    def __call__(self):
+    def __call__(self) -> pd.DataFrame:
+        """Return the formatted DataFrame."""
         return self.df
 
     @property
     def durations(self) -> pd.Series:
+        """Return the durations of the intervals.
+
+        >>> df = pd.DataFrame([(100, 200), (300, 500)])
+        >>> df.ivl.durations
+        0    100.0
+        1    200.0
+        dtype: float64
+
+        """
         starts = self.df["start"]
         ends = self.df["end"]
         return ends - starts
 
     @property
     def span(self) -> float:
+        """Return the total time covered in the intervals DataFrame.
+
+        >>> df = pd.DataFrame([(100, 200), (300, 500)])
+        >>> df.ivl.span
+        400.0
+
+        """
         return self.df["end"].max() - self.df["start"].min()
 
     @property
-    def basic(self):
+    def basic(self) -> Self:
+        """Toggle usage of basic (non-vectorised) algorithms.
+
+        >>> df = pd.DataFrame([(100, 200), (150, 300), (400, 500)], columns=['start', 'end'])
+        >>> df.ivl.overlap()
+           start    end
+        0  100.0  200.0
+        1  150.0  300.0
+        >>> df.ivl.basic.overlap()
+           start    end
+        0  100.0  200.0
+        1  150.0  300.0
+
+        """
         self._basic = True
         return self
 
-    def plot(  # IDEA: matplotlib impl?
+    def plot(
         self,
         groupby_cols: Optional[List[str]] = None,
         colors: Optional[List[str]] = None,
         **layout_kwargs,
-    ):
+    ) -> Figure:
+        """Plots a DataFrame of intervals. Plotly must be available for this to work.
+
+            >>> df = pd.DataFrame([(100, 200), (400, 500)], columns=['start', 'end'])
+            >>> df.ivl.plot()  # doctest: +SKIP
+
+        Args:
+            groupby_cols: List of columns to group DataFrame by before plotting. By default uses the
+                `additional_cols` with a `"groupy"` agg value.
+            colors: List of plotly colors to use when plotting intervals.
+            layout_kwargs: Kwargs to pass to the `plotly.go.Figure.layout` method.
+        """
         if plotly is None:
             raise ImportError("Plotting intervals requires `plotly` to be installed")
 
@@ -220,37 +182,86 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         return plot_intervals(self.df, groupby_cols, colors, **layout_kwargs)
 
     def sort(self) -> pd.DataFrame:
+        """Sort DataFrame by 'start', 'end', and each additional column in order.
+
+        >>> df = pd.DataFrame([(400, 450), (400, 500), (100, 200)], columns=['start', 'end'])
+        >>> df.ivl.sort()
+           start    end
+        2  100.0  200.0
+        0  400.0  450.0
+        1  400.0  500.0
+
+        """
         results = sort_intervals(
             self.df,
             sort_cols=self.additional_cols,
         )
-        return results.reset_index(drop=True)
+        return results
 
-    # TODO Test
+    # TODO Test unit
     def shorter_than(self, upper_bound: float, strict: bool = False) -> pd.DataFrame:
-        if strict:
-            self.df.loc[self.durations < float(upper_bound)]
-        else:
-            self.df.loc[self.durations <= float(upper_bound)]
+        """Filters DataFrames to rows containing intervals that are shorter than a given duration.
 
-    # TODO Test
+            >>> df = pd.DataFrame([(400, 450), (400, 500), (100, 200)], columns=['start', 'end'])
+            >>> df.ivl.shorter_than(80)
+               start    end
+            0  400.0  450.0
+
+        Args:
+            upper_bound: Maximum allowable duration to return.
+            strict: Whether to use a strict inequality (False by default).
+        """
+        if strict:
+            return self.df.loc[self.durations < float(upper_bound)]
+        else:
+            return self.df.loc[self.durations <= float(upper_bound)]
+
+    # TODO Test unit
     def longer_than(self, lower_bound: float, strict: bool = False) -> pd.DataFrame:
-        if strict:
-            self.df.loc[self.durations > float(lower_bound)]
-        else:
-            self.df.loc[self.durations >= float(lower_bound)]
+        """Filters DataFrames to rows containing intervals that are longer than a given duration.
 
-    # TODO Test
+            >>> df = pd.DataFrame([(400, 450), (400, 500), (100, 200)], columns=['start', 'end'])
+            >>> df.ivl.longer_than(80)
+               start    end
+            1  400.0  500.0
+            2  100.0  200.0
+
+        Args:
+            upper_bound: Maximum allowable duration to return.
+            strict: Whether to use a strict inequality (False by default).
+        """
+        if strict:
+            return self.df.loc[self.durations > float(lower_bound)]
+        else:
+            return self.df.loc[self.durations >= float(lower_bound)]
+
+    # TODO Test unit
     def between(
         self,
         left_bound: Optional[float] = None,
         right_bound: Optional[float] = None,
         strict: bool = False,
     ) -> pd.DataFrame:
+        """Filters DataFrames to rows containing intervals that are between two given time points.
+
+            >>> df = pd.DataFrame([(100, 160), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df.ivl.between(150, 300)
+               start    end
+            0  100.0  160.0
+            1  200.0  250.0
+
+        Args:
+            left_bound: Left endpoint of bounds.
+            right_bound: Right endpoint of bounds.
+            strict: Whether to return intervals completely within the bounds or return intervals
+                with any overlap with bounds (False by default).
+        """
         if left_bound is None:
             left_bound = self.df["start"].min()
         if right_bound is None:
             left_bound = self.df["end"].max()
+
+        assert left_bound <= right_bound
 
         if not strict:
             mask = (self.df["end"] >= left_bound) & (self.df["start"] <= right_bound)
@@ -259,8 +270,23 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
         return self.df.loc[mask]
 
-    # TODO Test
+    # TODO Test unit
     def contains(self, df: pd.DataFrame) -> bool:
+        """Returns whether a DataFrame contains all intervals found in another DataFrame.
+
+            >>> df_a = pd.DataFrame([(100, 160), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df_b = pd.DataFrame([(100, 160)], columns=['start', 'end'])
+            >>> df_c = pd.DataFrame([(700, 860)], columns=['start', 'end'])
+            >>> df_a.ivl.contains(df_b)
+            True
+            >>> df_b.ivl.contains(df_a)
+            False
+            >>> df_a.ivl.contains(df_c)
+            False
+
+        Args:
+            df: Another DataFrame matching the Intervals spec.
+        """
         df = df.drop_duplicates()
         df_all = self.union(df)
         return len(self.df.drop_duplicates()) == len(df_all)
@@ -271,16 +297,70 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         left_pad: Optional[float] = None,
         right_pad: Optional[float] = None,
     ):
+        """Pads the intervals in the DataFrame by a specified amount.
+
+            >>> df = pd.DataFrame([(100, 160), (200, 250)], columns=['start', 'end'])
+            >>> df.ivl.pad(20)
+               start    end
+            0   80.0  180.0
+            1  180.0  270.0
+            >>> df.ivl.pad(left_pad=30)
+               start    end
+            0   70.0  160.0
+            1  170.0  250.0
+            >>> df.ivl.pad(right_pad=-55)
+               start    end
+            0  100.0  105.0
+
+        Args:
+            pad: Value to pad both 'start' and 'end' columns with.
+            left_pad: Value to pad only 'start' column with.
+            right_pad: Value to pad only 'end' column with.
+        """
         if pad is not None:
             if left_pad is not None or right_pad is not None:
                 raise ValueError("Either use `pad`, or `left_pad`/`right_pad`.")
             left_pad, right_pad = pad, pad
 
-        self.df["start"] = self.df["start"] - (left_pad or 0)
-        self.df["end"] = self.df["end"] + (right_pad or 0)
-        return self.df.loc[self.durations >= 0]
+        starts = self.df["start"] - (left_pad or 0)
+        ends = self.df["end"] + (right_pad or 0)
+        mask = ends - starts >= 0
+        return self.df.assign(start=starts, end=ends).loc[mask]
+
+    def union(self, *dfs) -> pd.DataFrame:
+        """Return the union with one or more DataFrames of intervals.
+
+            >>> df_a = pd.DataFrame([(100, 160), (200, 250)], columns=['start', 'end'])
+            >>> df_b = pd.DataFrame([(100, 160), (400, 550)], columns=['start', 'end'])
+            >>> df_a.ivl.union(df_b)
+               start    end
+            0  100.0  160.0
+            1  200.0  250.0
+            1  400.0  550.0
+
+        Args:
+            dfs: DataFrames of intervals to take union with.
+        """
+        interval_sets = [self.df, *[self.format(df) for df in dfs]]
+        return pd.concat(interval_sets, axis=0).drop_duplicates()
 
     def overlap(self) -> pd.DataFrame:
+        """Return the intervals in a DataFrame which overlap with each other.
+
+            >>> df = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df.ivl.overlap()
+               start    end
+            0  100.0  220.0
+            1  200.0  250.0
+
+        Compatible with `basic` flag.
+
+            >>> df.ivl.basic.overlap()
+               start    end
+            0  100.0  220.0
+            1  200.0  250.0
+
+        """
         operation = basic.overlap if self._basic else overlap
         return self.apply_to_groups(
             operation,
@@ -288,30 +368,50 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
 
     def non_overlap(self) -> pd.DataFrame:
+        """Return the intervals in a DataFrame which overlap with each other.
+
+            >>> df = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df.ivl.non_overlap()
+               start    end
+            2  400.0  500.0
+
+        Compatible with `basic` flag.
+
+            >>> df.ivl.basic.non_overlap()
+               start    end
+            2  400.0  500.0
+
+        """
         operation = basic.non_overlap if self._basic else non_overlap
         return self.apply_to_groups(
             operation,
             [self.df],
         )
 
-    def complement(
-        self,
-        left_bound: Optional[float] = None,
-        right_bound: Optional[float] = None,
-    ):
-        operation = basic.complement if self._basic else complement
-        return self.apply_to_groups(
-            operation,
-            [self.df],
-            left_bound=left_bound,
-            right_bound=right_bound,
-        )
-
-    def union(self, *dfs) -> pd.DataFrame:
-        interval_sets = [self.df, *[self.format(df) for df in dfs]]
-        return pd.concat(interval_sets, axis=0).drop_duplicates()
-
+    # TODO Test unit duplicates
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Return the intervals in a DataFrame which intersect with the intervals in another
+        DataFrame.
+
+            >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df_b = pd.DataFrame([(100, 220), (230, 300), (600, 700)], columns=['start', 'end'])
+            >>> df_a.ivl.intersection(df_b)
+               start    end
+            0  100.0  220.0
+            1  200.0  250.0
+            1  230.0  300.0
+
+        Compatible with `basic` flag.
+
+            >>> df_a.ivl.basic.intersection(df_b)
+               start    end
+            0  100.0  220.0
+            1  200.0  250.0
+            1  230.0  300.0
+
+        Args:
+            df: Another DataFrame of intervals.
+        """
         operation = basic.intersection if self._basic else intersection
         return self.apply_to_groups(
             operation,
@@ -319,6 +419,24 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
 
     def diff(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Return the intervals in a DataFrame which do not intersect with the intervals in another
+        DataFrame.
+
+            >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df_b = pd.DataFrame([(100, 220), (230, 300), (600, 700)], columns=['start', 'end'])
+            >>> df_a.ivl.diff(df_b)
+               start    end
+            2  400.0  500.0
+
+        Compatible with `basic` flag.
+
+            >>> df_a.ivl.basic.diff(df_b)
+               start    end
+            2  400.0  500.0
+
+        Args:
+            df: Another DataFrame of intervals.
+        """
         operation = basic.diff if self._basic else diff
         return self.apply_to_groups(
             operation,
@@ -326,6 +444,25 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
 
     def symdiff(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Return the intervals in a DataFrame which are mutually exclusive with intervals in
+        another DataFrame.
+
+            >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df_b = pd.DataFrame([(100, 220), (230, 300), (600, 700)], columns=['start', 'end'])
+            >>> df_a.ivl.symdiff(df_b)
+               start    end
+            2  400.0  500.0
+            2  600.0  700.0
+
+        Compatible with `basic` flag.
+            >>> df_a.ivl.symdiff(df_b)
+               start    end
+            2  400.0  500.0
+            2  600.0  700.0
+
+        Args:
+            df: Another DataFrame of intervals.
+        """
         operation = basic.symdiff if self._basic else symdiff
         return self.apply_to_groups(
             operation,
@@ -333,20 +470,125 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         )
 
     def combine(self, *dfs) -> pd.DataFrame:
+        """Return the combination of intervals in a DataFrame (optionally combine intervals across
+        other DataFrames).
+
+            >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
+            >>> df_a.ivl.combine()
+               start    end
+            0  100.0  250.0
+            1  400.0  500.0
+            >>> df_b = pd.DataFrame([(100, 220), (230, 300), (600, 700)], columns=['start', 'end'])
+            >>> df_a.ivl.combine(df_b)
+               start    end
+            0  100.0  300.0
+            1  400.0  500.0
+            2  600.0  700.0
+
+        Compatible with `basic` flag.
+
+            >>> df_a.ivl.basic.combine(df_b)
+               start    end
+            0  100.0  300.0
+            1  400.0  500.0
+            2  600.0  700.0
+
+        Args:
+            dfs: Other DataFrames of intervals that are optionally unioned before combining
+                intervals.
+        """
         operation = basic.combine if self._basic else combine
         return self.apply_to_groups(
             operation,
             [self.union(*dfs)],
-        )
+        ).reset_index(drop=True)
+
+    def complement(
+        self,
+        left_bound: Optional[float] = None,
+        right_bound: Optional[float] = None,
+    ):
+        """Return the complement of a DataFrame of intervals.
+
+            >>> df = pd.DataFrame(
+            ...     [(100, 160), (200, 250), (400, 500), (450, 520)],
+            ...     columns=['start', 'end'],
+            ... )
+            >>> df.ivl.complement()
+               start    end
+            0  160.0  200.0
+            1  250.0  400.0
+
+        Compatible with `basic` flag.
+
+            >>> df.ivl.basic.complement()
+               start    end
+            0  160.0  200.0
+            1  250.0  400.0
+
+        """
+        operation = basic.complement if self._basic else complement
+        return self.apply_to_groups(
+            operation,
+            [self.df],
+            left_bound=left_bound,
+            right_bound=right_bound,
+        ).reset_index(drop=True)
 
     def truncate(self, df: pd.DataFrame):
+        """Return the truncation of intervals in a DataFrame around the intervals of another
+        DataFrame.
+
+            >>> df_a = pd.DataFrame([(100, 160), (200, 300), (400, 500)], columns=['start', 'end'])
+            >>> df_b = pd.DataFrame([(140, 180), (230, 250), (600, 700)], columns=['start', 'end'])
+            >>> df_a.ivl.truncate(df_b)
+               start    end
+            0  100.0  140.0
+            1  200.0  230.0
+            1  250.0  300.0
+            2  400.0  500.0
+
+        Compatible with `basic` flag.
+
+            >>> df_a.ivl.basic.truncate(df_b)
+               start    end
+            0  100.0  140.0
+            1  200.0  230.0
+            1  250.0  300.0
+            2  400.0  500.0
+
+        Args:
+            df: Another DataFrame of intervals.
+        """
         operation = basic.truncate if self._basic else truncate
         return self.apply_to_groups(
             operation,
             [self.df, self.format(df)],
         )
 
-    def nearest(self, df: pd.DataFrame):
+    def nearest(self, df: pd.DataFrame) -> pd.Series:
+        """Return the distance between each interval and the closest interval in another DataFrame
+        of intervals.
+
+            >>> df_a = pd.DataFrame([(100, 160), (300, 370), (400, 500)], columns=['start', 'end'])
+            >>> df_b = pd.DataFrame([(140, 180), (230, 250), (600, 700)], columns=['start', 'end'])
+            >>> df_a.ivl.nearest(df_b)
+            0      0.0
+            1     50.0
+            2    100.0
+            dtype: float64
+
+        Compatible with `basic` flag.
+
+            >>> df_a.ivl.nearest(df_b)
+            0      0.0
+            1     50.0
+            2    100.0
+            dtype: float64
+
+        Args:
+            df: Another DataFrame of intervals.
+        """
         operation = basic.nearest if self._basic else nearest
         return self.apply_to_groups(
             operation,
