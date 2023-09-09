@@ -11,7 +11,7 @@ def truncate(
     if len(df_a) == 0 or len(df_b) == 0:
         return df_a
 
-    df_a = df_a.sort_values("start")
+    df_a = df_a.sort_values(["start", "end"])
     df_b = combine(df_b[["start", "end"]]).sort_values("start")
 
     # Remove zero duration df_b that are equal to start/end of df_a (no effect)
@@ -19,6 +19,9 @@ def truncate(
         df_b["start"].isin(df_a["start"]) | df_b["start"].isin(df_a["end"])
     )
     df_b = df_b[~_mask]
+
+    # Track the index as a column
+    df_a = df_a.assign(_index=df_a.index)
 
     intervals_a = df_to_list(df_a)
     intervals_b = df_to_list(df_b)
@@ -73,4 +76,8 @@ def truncate(
         if keep_label:
             results.append((start_a, end_a, *metadata))
 
-    return pd.DataFrame(results, columns=df_a.columns)
+    return (
+        pd.DataFrame(results, columns=df_a.columns)
+        .set_index("_index")
+        .rename_axis(index=None)
+    )
