@@ -42,6 +42,14 @@ from pandas_intervals import setup_ivl_accessor
 setup_ivl_accessor()
 ```
 
+The core documentation can be accessed within Python:
+```python
+>>> import pandas as pd
+>>> from pandas_intervals import setup_ivl_accessor
+>>> setup_ivl_accessor()
+>>> help(pd.DataFrame.ivl)
+```
+
 ## Usage
 Say we have two sets of intervals `A` and `B` as specified by:
 ```
@@ -93,18 +101,75 @@ print(df_b)
 We have all the standard methods available to DataFrames, but we also now have native interval set operations implemented through the `ivl` accessor:
 ```python
 union = df_a.ivl.union(df_b)
+#     A  :   [----)     [----)
+#     B  :   [----)             [----)
+#
+# Result :   [----)     [----)  [----)
+
+overlapping = df_a.ivl.overlap()
+#     A  :   [----)     [----)
+#               [----)
+#
+# Result :   [----)
+#               [----)
+
+non_overlapping = df_a.ivl.non_overlap()
+#     A  :   [----)     [----)
+#               [----)
+#
+# Result :              [----)
 
 intersection = df_a.ivl.intersection(df_b)
+#     A  :   [----)        [----)
+#               [----)
+#     B  :   [----) [----)        [----)
+#
+# Result :   [----) [----)
+#               [----)
 
-combined = df_a.ivl.combine(df_b)
+diff = df_a.ivl.diff(df_b)
+#     A  :   [----)        [----)
+#               [----)
+#     B  :   [----) [----)        [----)
+#
+# Result :                 [----)
 
-padded = df_a.ivl.pad(10)  # Optional kwargs: `left_pad`, `right_pad`
+symdiff = df_a.ivl.symdiff(df_b)
+#     A  :   [----)        [----)
+#               [----)
+#     B  :   [----) [----)        [----)
+#
+# Result :                 [----) [----)
 
-trunc = df_a.ivl.truncate(df_b)
+combined = df_a.ivl.combine()  # Optionally accepts intervals DataFrame as arg
+#     A  :   [----)        [----)
+#               [----)
+#
+# Result :   [-------)     [----)
 
 complement = df_a.ivl.complement()  # Optional kwargs: `left_bound`, `right_bound`
+#     A  :   [----)        [----)    [---)
+#               [----)
+#
+# Result :           [-----)    [----)
 
-df_a_contains_df_b = df_a.ivl.contains(df_b)
+trunc = df_a.ivl.truncate(df_b)
+#     A  :   [------------)   [----)     [---)
+#     B  :      [----)            [----)        [---)
+#
+# Result :   [--)    [----)   [---)      [---)
+
+```
+
+There's also a few additional methods for filtering and calculating durations and distances on intervals:
+```python
+intervals_between_bounds = df_a.ivl.between(200, 400)
+
+short_intervals = df_a.ivl.shorter_than(50)
+
+long_intervals = df_a.ivl.longest_than(500)
+
+padded = df_a.ivl.pad(10)  # Optional kwargs: `left_pad`, `right_pad`
 
 df_a_min_dist_to_b = df_a.ivl.nearest(df_b)
 ```

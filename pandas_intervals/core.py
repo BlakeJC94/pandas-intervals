@@ -329,6 +329,14 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def union(self, *dfs) -> pd.DataFrame:
         """Return the union with one or more DataFrames of intervals.
 
+        Example:
+        ```
+        #     A  :   [----)     [----)
+        #     B  :   [----)             [----)
+        #
+        # Result :   [----)     [----)  [----)
+        ```
+
             >>> df_a = pd.DataFrame([(100, 160), (200, 250)], columns=['start', 'end'])
             >>> df_b = pd.DataFrame([(100, 160), (400, 550)], columns=['start', 'end'])
             >>> df_a.ivl.union(df_b)
@@ -345,6 +353,15 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
 
     def overlap(self) -> pd.DataFrame:
         """Return the intervals in a DataFrame which overlap with each other.
+
+        Example:
+        ```
+        #     A  :   [----)     [----)
+        #               [----)
+        #
+        # Result :   [----)
+        #               [----)
+        ```
 
             >>> df = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
             >>> df.ivl.overlap()
@@ -369,6 +386,14 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def non_overlap(self) -> pd.DataFrame:
         """Return the intervals in a DataFrame which overlap with each other.
 
+        Example:
+        ```
+        #     A  :   [----)     [----)
+        #               [----)
+        #
+        # Result :              [----)
+        ```
+
             >>> df = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
             >>> df.ivl.non_overlap()
                start    end
@@ -391,6 +416,16 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def intersection(self, df: pd.DataFrame) -> pd.DataFrame:
         """Return the intervals in a DataFrame which intersect with the intervals in another
         DataFrame.
+
+        Example:
+        ```
+        #     A  :   [----)        [----)
+        #               [----)
+        #     B  :   [----) [----)        [----)
+        #
+        # Result :   [----) [----)
+        #               [----)
+        ```
 
             >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
             >>> df_b = pd.DataFrame([(100, 220), (230, 300), (600, 700)], columns=['start', 'end'])
@@ -422,6 +457,15 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
         """Return the intervals in a DataFrame which do not intersect with the intervals in another
         DataFrame.
 
+        Example:
+        ```
+        #     A  :   [----)        [----)
+        #               [----)
+        #     B  :   [----) [----)        [----)
+        #
+        # Result :                 [----)
+        ```
+
             >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
             >>> df_b = pd.DataFrame([(100, 220), (230, 300), (600, 700)], columns=['start', 'end'])
             >>> df_a.ivl.diff(df_b)
@@ -447,6 +491,15 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def symdiff(self, df: pd.DataFrame) -> pd.DataFrame:
         """Return the intervals in a DataFrame which are mutually exclusive with intervals in
         another DataFrame.
+
+        Example:
+        ```
+        #     A  :   [----)        [----)
+        #               [----)
+        #     B  :   [----) [----)        [----)
+        #
+        # Result :                 [----) [----)
+        ```
 
             >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
             >>> df_b = pd.DataFrame([(100, 220), (230, 300), (600, 700)], columns=['start', 'end'])
@@ -474,6 +527,14 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def combine(self, *dfs) -> pd.DataFrame:
         """Return the combination of intervals in a DataFrame (optionally combine intervals across
         other DataFrames).
+
+        Example:
+        ```
+        #     A  :   [----)        [----)
+        #               [----)
+        #
+        # Result :   [-------)     [----)
+        ```
 
             >>> df_a = pd.DataFrame([(100, 220), (200, 250), (400, 500)], columns=['start', 'end'])
             >>> df_a.ivl.combine()
@@ -512,6 +573,13 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     ):
         """Return the complement of a DataFrame of intervals.
 
+        Example:
+        ```
+        #     A  :   [----)        [----)    [---)
+        #               [----)
+        #
+        # Result :           [-----)    [----)
+        ```
             >>> df = pd.DataFrame(
             ...     [(100, 160), (200, 250), (400, 500), (450, 520)],
             ...     columns=['start', 'end'],
@@ -540,6 +608,15 @@ class IntervalsAccessor(FieldsTrait, FormatTrait):
     def truncate(self, df: pd.DataFrame):
         """Return the truncation of intervals in a DataFrame around the intervals of another
         DataFrame.
+
+        Example:
+
+        ```
+        #     A  :   [------------)   [----)     [---)
+        #     B  :      [----)            [----)        [---)
+        #
+        # Result :   [--)    [----)   [---)      [---)
+        ```
 
             >>> df_a = pd.DataFrame([(100, 160), (200, 300), (400, 500)], columns=['start', 'end'])
             >>> df_b = pd.DataFrame([(140, 180), (230, 250), (600, 700)], columns=['start', 'end'])
