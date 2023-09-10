@@ -16,7 +16,7 @@ Minimal requirements:
 
 Install the latest stable version from `PyPi`:
 ```
-$ pip install pandas_intervals
+$ pip install pandas-intervals
 ```
 
 Or clone this repo and install:
